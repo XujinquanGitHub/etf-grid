@@ -145,7 +145,37 @@ CREATE TABLE `tb_user` (
 ) ENGINE=`InnoDB` DEFAULT CHARACTER SET utf8mb4 COMMENT='用户';
 
 
+CREATE TABLE `etf_investment_plan` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '投资计划名',
+  `fund_name` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '基金名称',
+  `fund_no` varchar(50) DEFAULT NULL COMMENT '基金号',
+  `init_price` decimal(20,8) DEFAULT NULL COMMENT '投资基金的初始净值',
+  `current_price` decimal(20,8) DEFAULT NULL COMMENT '基金当前净值',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  `single_amount` decimal(20,5) DEFAULT NULL COMMENT '初始单次投入金额',
+  `price_range` decimal(20,5) DEFAULT NULL COMMENT '涨跌幅度到多少时通知用户',
+  `receive_mail` varchar(200) DEFAULT NULL COMMENT '接收通知的邮件',
+  `inspect_time` time DEFAULT NULL COMMENT '每个交易日检查时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
+
+CREATE TABLE `etf_grid` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `plan_id` int NOT NULL,
+  `num` decimal(20,2) DEFAULT NULL,
+  `buy_price` decimal(20,2) DEFAULT NULL,
+  `sell_price` decimal(20,2) DEFAULT NULL,
+  `buy_amount` decimal(20,2) DEFAULT NULL,
+  `buy_cost` decimal(20,2) DEFAULT NULL,
+  `sell_amount` decimal(20,2) DEFAULT NULL,
+  `sell_cost` decimal(20,2) DEFAULT NULL,
+  `profit` decimal(20,2) DEFAULT NULL,
+  `profit_rate` decimal(20,2) DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 
