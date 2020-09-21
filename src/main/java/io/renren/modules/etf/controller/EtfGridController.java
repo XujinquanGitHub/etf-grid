@@ -86,7 +86,6 @@ public class EtfGridController {
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(collect)) {
                 FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo());
-                fundInfo.setGsz(new BigDecimal(0.9));
                 for (int i = 0; i < collect.size(); i++) {
                     EtfGridEntity etfGridEntity = collect.get(i);
                     // 当前价格减去买入价格
