@@ -60,7 +60,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
     @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
         //获取请求token，如果token不存在，直接返回401
-       String token = getRequestToken((HttpServletRequest) request);
+        String token = getRequestToken((HttpServletRequest) request);
 
         if (StringUtils.isBlank(token)) {
             HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -96,11 +96,20 @@ public class OAuth2Filter extends AuthenticatingFilter {
         return false;
     }
 
+    @Autowired
+    private SysUserTokenService sysUserTokenService;
+
+    private String token = "";
+
     /**
      * 获取请求的token
      */
     private String getRequestToken(HttpServletRequest httpRequest) {
-      return  "16546a5c1de8117b754f8f3cfa963df7";
+//        if (StringUtils.isBlank(token)) {
+//            token = sysUserTokenService.createToken(1).get("token").toString();
+//        }
+//        return token;
+    return  "7ba612acb171bd6773049d9e77ed915f";
 //
 //        //从header中获取token
 //        String token = httpRequest.getHeader("token");

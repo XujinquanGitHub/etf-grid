@@ -2,6 +2,7 @@ package io.renren.modules.etf.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.renren.common.utils.PageUtils;
+import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 
 import java.util.Map;
@@ -15,5 +16,8 @@ import java.util.Map;
 public interface EtfInvestmentPlanService extends IService<EtfInvestmentPlanEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+
+    FundModel getFundInfo(String fundNo);
 }
 

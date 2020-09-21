@@ -52,9 +52,13 @@ public class EtfInvestmentPlanEntity implements Serializable {
 	 */
 	private BigDecimal singleAmount;
 	/**
-	 * 涨跌幅度到多少时通知用户
+	 * 涨幅度到多少时通知用户
 	 */
-	private BigDecimal priceRange;
+	private BigDecimal riseRange;
+	/**
+	 * 跌幅度到多少时通知用户
+	 */
+	private BigDecimal fallRange;
 	/**
 	 * 接收通知的邮件
 	 */

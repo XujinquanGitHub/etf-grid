@@ -19,6 +19,8 @@ import lombok.Data;
 public class EtfGridEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
+
+
 	/**
 	 * 
 	 */
@@ -28,6 +30,14 @@ public class EtfGridEntity implements Serializable {
 	 * 
 	 */
 	private Integer planId;
+
+
+	// 基金名
+	private String name;
+
+	// 基金代码
+	private String fundNo;
+
 	/**
 	 * 
 	 */
@@ -44,18 +54,12 @@ public class EtfGridEntity implements Serializable {
 	 * 
 	 */
 	private BigDecimal buyAmount;
-	/**
-	 * 
-	 */
-	private BigDecimal buyCost;
+
 	/**
 	 * 
 	 */
 	private BigDecimal sellAmount;
-	/**
-	 * 
-	 */
-	private BigDecimal sellCost;
+
 	/**
 	 * 
 	 */
@@ -67,6 +71,11 @@ public class EtfGridEntity implements Serializable {
 	/**
 	 * 
 	 */
-	private Date createTime;
+	private Date buyTime;
+
+	private Date sellTime;
+
+	private Integer status;
+
 
 }

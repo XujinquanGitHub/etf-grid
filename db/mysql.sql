@@ -154,29 +154,31 @@ CREATE TABLE `etf_investment_plan` (
   `current_price` decimal(20,8) DEFAULT NULL COMMENT '基金当前净值',
   `create_date` datetime DEFAULT NULL COMMENT '创建时间',
   `single_amount` decimal(20,5) DEFAULT NULL COMMENT '初始单次投入金额',
-  `price_range` decimal(20,5) DEFAULT NULL COMMENT '涨跌幅度到多少时通知用户',
+  `rise_range` decimal(20,5) DEFAULT NULL COMMENT '涨幅度到多少时通知用户',
+  `fall_range` decimal(20,5) DEFAULT NULL COMMENT '跌幅度到多少时通知用户',
   `receive_mail` varchar(200) DEFAULT NULL COMMENT '接收通知的邮件',
   `inspect_time` time DEFAULT NULL COMMENT '每个交易日检查时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 CREATE TABLE `etf_grid` (
   `id` int NOT NULL AUTO_INCREMENT,
   `plan_id` int NOT NULL,
-  `num` decimal(20,2) DEFAULT NULL,
-  `buy_price` decimal(20,2) DEFAULT NULL,
-  `sell_price` decimal(20,2) DEFAULT NULL,
-  `buy_amount` decimal(20,2) DEFAULT NULL,
-  `buy_cost` decimal(20,2) DEFAULT NULL,
-  `sell_amount` decimal(20,2) DEFAULT NULL,
-  `sell_cost` decimal(20,2) DEFAULT NULL,
-  `profit` decimal(20,2) DEFAULT NULL,
-  `profit_rate` decimal(20,2) DEFAULT NULL,
-  `create_time` datetime DEFAULT NULL,
+  `fund_no` varchar(20) DEFAULT NULL COMMENT '基金代码',
+  `name` varchar(500) DEFAULT NULL COMMENT '基金名',
+  `num` decimal(20,5) DEFAULT NULL COMMENT '数量',
+  `buy_price` decimal(20,5) DEFAULT NULL COMMENT '买入价格',
+  `sell_price` decimal(20,5) DEFAULT NULL COMMENT '卖出价格',
+  `buy_amount` decimal(20,5) DEFAULT NULL COMMENT '买入金额',
+  `sell_amount` decimal(20,5) DEFAULT NULL COMMENT '卖出金额',
+  `profit` decimal(20,5) DEFAULT NULL COMMENT '盈利',
+  `profit_rate` decimal(20,5) DEFAULT NULL COMMENT '盈利百分',
+  `buy_time` datetime DEFAULT NULL COMMENT '买入时间',
+  `sell_time` datetime DEFAULT NULL COMMENT '卖出时间',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '0、计划买入 1、买入  2、待卖出 3、已卖出',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 -- 初始数据 

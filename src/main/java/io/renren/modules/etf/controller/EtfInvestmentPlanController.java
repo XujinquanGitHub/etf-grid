@@ -58,15 +58,7 @@ public class EtfInvestmentPlanController {
      */
     @RequestMapping("/save")
     public R save(@RequestBody EtfInvestmentPlanEntity etfInvestmentPlan) {
-        String url = "http://fundgz.1234567.com.cn/js/" + etfInvestmentPlan.getFundNo() + ".js?rt=634543645643";
-        Map<String, String> head = new HashMap<>();
-        head.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
-        head.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36");
-        String response = HttpRequest.get(url).addHeaders(head).execute().body();
-        response = response.replace("jsonpgz({", "{");
-        response = response.replace("});", "}");
-        System.out.println(response);
-        FundModel fundModel = JSON.parseObject(response, FundModel.class);
+        FundModel fundModel = etfInvestmentPlanService.getFundInfo(etfInvestmentPlan.getFundNo());
         etfInvestmentPlan.setFundName(fundModel.getName());
         etfInvestmentPlan.setInitPrice(fundModel.getGsz());
         etfInvestmentPlan.setCurrentPrice(fundModel.getGsz());
