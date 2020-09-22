@@ -9,6 +9,7 @@ import io.renren.modules.etf.service.EtfInvestmentPlanService;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -41,5 +42,8 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
         return JSON.parseObject(response, FundModel.class);
     }
 
-
+    @Override
+    public List<EtfInvestmentPlanEntity> queryList(Map<String, Object> params) {
+       return listByMap(params);
+    }
 }

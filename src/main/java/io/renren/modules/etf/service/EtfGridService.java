@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import io.renren.common.utils.PageUtils;
 import io.renren.modules.etf.entity.EtfGridEntity;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,5 +16,7 @@ import java.util.Map;
 public interface EtfGridService extends IService<EtfGridEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+    List<EtfGridEntity> queryList(Map<String, Object> params);
 }
 

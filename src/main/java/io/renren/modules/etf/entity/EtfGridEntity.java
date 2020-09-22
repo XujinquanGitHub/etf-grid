@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.math.BigDecimal;
 import java.io.Serializable;
 import java.util.Date;
+
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 
@@ -16,7 +19,8 @@ import lombok.Data;
  */
 @Data
 @TableName("etf_grid")
-public class EtfGridEntity implements Serializable {
+@Accessors(chain = true)
+public class EtfGridEntity extends Model<EtfGridEntity> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 
@@ -76,6 +80,8 @@ public class EtfGridEntity implements Serializable {
 	private Date sellTime;
 
 	private Integer status;
+
+	private String outId;
 
 
 }

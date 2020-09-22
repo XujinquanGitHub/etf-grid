@@ -109,7 +109,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
 //            token = sysUserTokenService.createToken(1).get("token").toString();
 //        }
 //        return token;
-    return  "7ba612acb171bd6773049d9e77ed915f";
+    return  "b80c1bdaf4e5e8b5059085c0573be219";
 //
 //        //从header中获取token
 //        String token = httpRequest.getHeader("token");

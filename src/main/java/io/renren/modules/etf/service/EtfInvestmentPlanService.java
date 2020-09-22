@@ -5,6 +5,7 @@ import io.renren.common.utils.PageUtils;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,5 +20,9 @@ public interface EtfInvestmentPlanService extends IService<EtfInvestmentPlanEnti
 
 
     FundModel getFundInfo(String fundNo);
+
+    List<EtfInvestmentPlanEntity> queryList(Map<String, Object> params);
+
+
 }
 

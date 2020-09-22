@@ -7,15 +7,19 @@ import java.math.BigDecimal;
 import java.io.Serializable;
 import java.sql.Time;
 import java.util.Date;
+
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 
  * @date 2020-09-18 17:06:22
  */
 @Data
+@Accessors(chain = true)
 @TableName("etf_investment_plan")
-public class EtfInvestmentPlanEntity implements Serializable {
+public class EtfInvestmentPlanEntity extends Model<EtfInvestmentPlanEntity> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**

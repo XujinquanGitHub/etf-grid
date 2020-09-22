@@ -4,6 +4,10 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
+import io.renren.modules.etf.DanJuanModel;
+import io.renren.modules.etf.Data;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.OperationModel;
 import io.renren.modules.etf.entity.EtfGridEntity;
@@ -11,6 +15,7 @@ import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfGridService;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
 import io.swagger.models.Operation;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,7 +121,7 @@ public class EtfGridController {
                 // 现在价格比买入时低
                 if (fundInfo.getGsz().compareTo(etfGridEntity.getBuyPrice()) < 0) {
                     // 计算差价
-                    BigDecimal subtract =etfGridEntity.getBuyPrice().subtract(fundInfo.getGsz());
+                    BigDecimal subtract = etfGridEntity.getBuyPrice().subtract(fundInfo.getGsz());
                     // 计算亏损率
                     BigDecimal divide = subtract.divide(etfGridEntity.getBuyPrice(), 6, BigDecimal.ROUND_HALF_UP);
                     divide = divide.multiply(new BigDecimal(100));
@@ -127,7 +132,7 @@ public class EtfGridController {
                         // 计算买入金额，用最低点的亏损率除以计划的亏损率乘以单批金额
                         BigDecimal amount = divide.divide(plan.getFallRange(), 6, BigDecimal.ROUND_HALF_UP).multiply(plan.getSingleAmount());
                         entity.setBuyAmount(amount);
-                        entity.setOperationString("买入金额:" + entity.getBuyAmount() );
+                        entity.setOperationString("买入金额:" + entity.getBuyAmount());
                         updateList.add(entity);
 
                         // 将这一网格设置为计划买入
@@ -153,5 +158,56 @@ public class EtfGridController {
 
         return R.ok();
     }
+
+    @RequestMapping("/importDanJuanData")
+    public boolean importDanJuanData(@RequestBody DanJuanModel danJuanModel) {
+        Data data = danJuanModel.getData();
+        if (StringUtils.isBlank(data.getFd_code())) {
+            System.out.println("基金代码为空");
+            return false;
+        }
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("fund_no", data.getFd_code());
+        List<EtfInvestmentPlanEntity> etfInvestmentPlanEntities = etfInvestmentPlanService.queryList(params);
+        EtfInvestmentPlanEntity planEntity = null;
+        if (CollectionUtils.isEmpty(etfInvestmentPlanEntities)) {
+            planEntity = new EtfInvestmentPlanEntity();
+            planEntity.setCreateDate(DateUtil.date());
+            planEntity.setFallRange(new BigDecimal(1));
+            planEntity.setRiseRange(new BigDecimal(10));
+            planEntity.setSingleAmount(new BigDecimal(1000));
+            FundModel fundModel = etfInvestmentPlanService.getFundInfo(data.getFd_code());
+            planEntity.setFundName(fundModel.getName());
+            planEntity.setInitPrice(fundModel.getGsz());
+            planEntity.setFundNo(data.getFd_code());
+            planEntity.setName(fundModel.getName() + "投资计划");
+            planEntity.setCurrentPrice(fundModel.getGsz());
+            planEntity.setCreateDate(DateTime.now());
+            etfInvestmentPlanService.save(planEntity);
+        } else {
+            planEntity = etfInvestmentPlanEntities.get(0);
+        }
+
+        params.clear();
+        params.put("out_id", data.getOrder_id());
+        // 已导入订单
+        List<EtfGridEntity> gridEntityList = etfGridService.queryList(params);
+        if (!CollectionUtils.isEmpty(gridEntityList)) {
+            return false;
+        }
+
+        EtfGridEntity gridEntity = new EtfGridEntity();
+        gridEntity.setStatus(1);
+        gridEntity.setBuyAmount(data.getConfirm_amount());
+        gridEntity.setNum(data.getConfirm_volume());
+        BigDecimal divide = gridEntity.getBuyAmount().divide(gridEntity.getNum(), 6, BigDecimal.ROUND_HALF_UP);
+        gridEntity.setBuyPrice(divide);
+        gridEntity.setBuyTime(DateUtil.date(data.getCreated_at()));
+        gridEntity.setPlanId(planEntity.getId());
+        gridEntity.setOutId(data.getOrder_id());
+        gridEntity.insert();
+        return true;
+    }
+
 
 }

@@ -4,6 +4,8 @@ import io.renren.modules.etf.dao.EtfGridDao;
 import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.service.EtfGridService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -24,6 +26,11 @@ public class EtfGridServiceImpl extends ServiceImpl<EtfGridDao, EtfGridEntity> i
         );
 
         return new PageUtils(page);
+    }
+
+    @Override
+    public List<EtfGridEntity> queryList(Map<String, Object> params) {
+        return listByMap(params);
     }
 
 }

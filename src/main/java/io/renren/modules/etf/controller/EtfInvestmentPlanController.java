@@ -63,7 +63,6 @@ public class EtfInvestmentPlanController {
         etfInvestmentPlan.setInitPrice(fundModel.getGsz());
         etfInvestmentPlan.setCurrentPrice(fundModel.getGsz());
         etfInvestmentPlan.setCreateDate(DateTime.now());
-
         etfInvestmentPlanService.save(etfInvestmentPlan);
 
         return R.ok();
