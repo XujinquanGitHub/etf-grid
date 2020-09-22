@@ -1,6 +1,9 @@
 package io.renren.modules.etf.service.impl;
 
 import cn.hutool.http.HttpRequest;
+import cn.hutool.json.JSONNull;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.druid.support.json.JSONUtils;
 import com.alibaba.fastjson.JSON;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
@@ -39,8 +42,7 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
         return new PageUtils(page);
     }
 
-    @Override
-    public FundModel getFundInfo(String fundNo) {
+    public FundModel getFundInfoByTianTian(String fundNo) {
         String url = "http://fundgz.1234567.com.cn/js/" + fundNo + ".js?rt=634543645643";
         Map<String, String> head = new HashMap<>();
         head.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
@@ -49,20 +51,31 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
         response = response.replace("jsonpgz({", "{");
         response = response.replace("});", "}");
         System.out.println(response);
+        return JSONUtil.toBean(response, FundModel.class);
+
+    }
+
+
+    @Override
+    public FundModel getFundInfo(String fundNo) {
+        FundModel result = null;
         try {
-            return JSON.parseObject(response, FundModel.class);
+            result = getFundInfoByTianTian(fundNo);
         } catch (Exception ex) {
-            System.out.println(ex.toString());
+            System.out.println("异常：" + ex.toString());
             try {
                 DanJuanFundInfo fundInfo = danJuanService.getFundInfo(fundNo, "");
                 Data data = fundInfo.getData();
                 FundDerived fundDerived = data.getFundDerived();
-                return new FundModel().setFundcode(fundNo).setName(data.getFdName()).setGsz(fundDerived.getUnit_nav());
+                // 从蛋卷获取到的是前一个交易日的净值
+                result = new FundModel().setFundcode(fundNo).setName(data.getFdName()).setGsz(fundDerived.getUnit_nav());
             } catch (Exception exs) {
                 System.out.println(exs.toString());
-                return new FundModel().setFundcode(fundNo).setGsz(new BigDecimal(1));
+                result = new FundModel().setFundcode(fundNo).setGsz(new BigDecimal(1));
             }
         }
+        return result;
+
     }
 
     @Override

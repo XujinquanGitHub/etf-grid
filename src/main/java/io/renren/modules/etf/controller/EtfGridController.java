@@ -80,10 +80,14 @@ public class EtfGridController {
     }
 
     @RequestMapping("/selectPrice")
-    public List<OperationModel> selectPrice() {
+    public List<OperationModel> selectPrice(@RequestParam String fundNoListString) {
         List<OperationModel> updateList = new ArrayList<>();
         List<EtfInvestmentPlanEntity> list = etfInvestmentPlanService.list();
         List<EtfGridEntity> gridEntityList = etfGridService.list();
+        if (StringUtils.isNotBlank(fundNoListString)) {
+            List<String> fundNoList = Arrays.asList(fundNoListString.split(","));
+            list = list.stream().filter(u -> fundNoList.contains(u.getFundNo())).collect(Collectors.toList());
+        }
         for (EtfInvestmentPlanEntity plan : list) {
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(collect)) {
