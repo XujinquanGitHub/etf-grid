@@ -3,11 +3,18 @@ package io.renren.modules.etf.service.impl;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSON;
 import io.renren.modules.etf.FundModel;
+import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
+import io.renren.modules.etf.danjuan.fund.Data;
+import io.renren.modules.etf.danjuan.fund.FundDerived;
 import io.renren.modules.etf.dao.EtfInvestmentPlanDao;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.rmi.server.ExportException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +28,9 @@ import io.renren.common.utils.Query;
 
 @Service("etfInvestmentPlanService")
 public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanDao, EtfInvestmentPlanEntity> implements EtfInvestmentPlanService {
+
+    @Autowired
+    private DanJuanService danJuanService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -39,11 +49,24 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
         response = response.replace("jsonpgz({", "{");
         response = response.replace("});", "}");
         System.out.println(response);
-        return JSON.parseObject(response, FundModel.class);
+        try {
+            return JSON.parseObject(response, FundModel.class);
+        } catch (Exception ex) {
+            System.out.println(ex.toString());
+            try {
+                DanJuanFundInfo fundInfo = danJuanService.getFundInfo(fundNo, "");
+                Data data = fundInfo.getData();
+                FundDerived fundDerived = data.getFundDerived();
+                return new FundModel().setFundcode(fundNo).setName(data.getFdName()).setGsz(fundDerived.getUnit_nav());
+            } catch (Exception exs) {
+                System.out.println(exs.toString());
+                return new FundModel().setFundcode(fundNo).setGsz(new BigDecimal(1));
+            }
+        }
     }
 
     @Override
     public List<EtfInvestmentPlanEntity> queryList(Map<String, Object> params) {
-       return listByMap(params);
+        return listByMap(params);
     }
 }

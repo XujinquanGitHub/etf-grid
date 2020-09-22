@@ -5,6 +5,8 @@ import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
+import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -38,12 +40,23 @@ public class DanJuanService {
         return JSON.parseObject(body, DanJuanModel.class);
     }
 
+
+    public DanJuanFundInfo getFundInfo(String fundNo,String cookies) {
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/fund/" + fundNo);
+        get.addHeaders(getHead(cookies));
+        String body = get.execute().body();
+        System.out.println("请求基金详情：" + body);
+        return JSON.parseObject(body, DanJuanFundInfo.class);
+    }
+
     private Map<String, String> getHead(String cookies) {
         Map<String, String> head = new HashMap<>();
         head.put("Accept", "application/json, text/plain, */*");
         head.put("Accept-Encoding", " gzip, deflate, br");
         head.put("Accept-Language", "en,zh-CN;q=0.9,zh;q=0.8");
-        head.put("Cookie", cookies);
+        if (StringUtils.isNotBlank(cookies)){
+            head.put("Cookie", cookies);
+        }
         head.put("Sec-Fetch-Dest", "empty");
         head.put("Sec-Fetch-Mode", "cors");
         head.put("Sec-Fetch-Site", "same-origin");
