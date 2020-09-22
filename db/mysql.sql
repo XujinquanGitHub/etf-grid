@@ -159,7 +159,8 @@ CREATE TABLE `etf_investment_plan` (
   `receive_mail` varchar(200) DEFAULT NULL COMMENT '接收通知的邮件',
   `inspect_time` time DEFAULT NULL COMMENT '每个交易日检查时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
 
 
 CREATE TABLE `etf_grid` (
@@ -177,8 +178,9 @@ CREATE TABLE `etf_grid` (
   `buy_time` datetime DEFAULT NULL COMMENT '买入时间',
   `sell_time` datetime DEFAULT NULL COMMENT '卖出时间',
   `status` tinyint NOT NULL DEFAULT '1' COMMENT '0、计划买入 1、买入  2、待卖出 3、已卖出',
+  `out_id` varchar(50) DEFAULT NULL COMMENT '外部导入ID，避免重复导入',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=123 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 -- 初始数据 

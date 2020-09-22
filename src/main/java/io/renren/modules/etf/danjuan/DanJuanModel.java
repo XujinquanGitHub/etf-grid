@@ -1,12 +1,14 @@
 
-package io.renren.modules.etf;
+package io.renren.modules.etf.danjuan;
 
+
+import io.renren.modules.etf.danjuan.Data;
 
 @lombok.Data
 @SuppressWarnings("unused")
 public class DanJuanModel {
 
-    private io.renren.modules.etf.Data data;
+    private Data data;
     private long resultCode;
 
     private Integer planId;

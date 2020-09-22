@@ -6,25 +6,22 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import io.renren.modules.etf.DanJuanModel;
-import io.renren.modules.etf.Data;
+import io.renren.modules.etf.danjuan.DanJuanModel;
+import io.renren.modules.etf.danjuan.DanJuanTradeList;
+import io.renren.modules.etf.danjuan.Data;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.OperationModel;
+import io.renren.modules.etf.danjuan.Item;
 import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfGridService;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
-import io.swagger.models.Operation;
+import io.renren.modules.etf.service.impl.DanJuanService;
 import org.apache.commons.lang.StringUtils;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import io.renren.common.utils.PageUtils;
 import io.renren.common.utils.R;
@@ -133,11 +130,17 @@ public class EtfGridController {
                         BigDecimal amount = divide.divide(plan.getFallRange(), 6, BigDecimal.ROUND_HALF_UP).multiply(plan.getSingleAmount());
                         entity.setBuyAmount(amount);
                         entity.setOperationString("买入金额:" + entity.getBuyAmount());
-                        updateList.add(entity);
-
                         // 将这一网格设置为计划买入
                         entity.setStatus(0);
-                        // todo: 添加一个定时任务在晚上11点将基金净值和份额添加进去
+                        updateList.add(entity);
+
+                        // 查询同一基金是否有未买入的网格，如果没有添加一网待卖入
+                        List<EtfGridEntity> unBuyList = gridEntityList.stream().filter(u -> u.getStatus().equals(0) && fundInfo.getFundcode().equals(u.getFundNo())).collect(Collectors.toList());
+                        if (CollectionUtils.isEmpty(unBuyList)) {
+                            entity.insert();
+                        }
+
+                        // todo: 添加一个接口，定时任务在晚上11点将基金净值和份额添加进去
 
                     }
                 }
@@ -160,11 +163,13 @@ public class EtfGridController {
     }
 
     @RequestMapping("/importDanJuanData")
-    public boolean importDanJuanData(@RequestBody DanJuanModel danJuanModel) {
+    public String importDanJuanData(@RequestBody DanJuanModel danJuanModel) {
         Data data = danJuanModel.getData();
+        if ("failed".equals(data.getStatus())) {
+            return "买入失败的记录";
+        }
         if (StringUtils.isBlank(data.getFd_code())) {
-            System.out.println("基金代码为空");
-            return false;
+            return "基金代码为空";
         }
         HashMap<String, Object> params = new HashMap<>();
         params.put("fund_no", data.getFd_code());
@@ -193,9 +198,11 @@ public class EtfGridController {
         // 已导入订单
         List<EtfGridEntity> gridEntityList = etfGridService.queryList(params);
         if (!CollectionUtils.isEmpty(gridEntityList)) {
-            return false;
+            return "已导入订单";
         }
-
+        if (data.getConfirm_volume().equals(new BigDecimal(0))) {
+            return "份额为0";
+        }
         EtfGridEntity gridEntity = new EtfGridEntity();
         gridEntity.setStatus(1);
         gridEntity.setBuyAmount(data.getConfirm_amount());
@@ -206,8 +213,31 @@ public class EtfGridController {
         gridEntity.setPlanId(planEntity.getId());
         gridEntity.setOutId(data.getOrder_id());
         gridEntity.insert();
-        return true;
+        return "成功";
     }
 
+    @Autowired
+    private DanJuanService danJuanService;
 
+    @RequestMapping("/importDanJuanDataList")
+    public String importDanJuanDataList(@RequestParam String zCode, @RequestParam String fundCode, @RequestHeader String cookieParams) {
+        if (StringUtils.isBlank(cookieParams)) {
+            return "cookie为空";
+        }
+        DanJuanTradeList tradeList = danJuanService.getTradeList(zCode, fundCode, cookieParams);
+        List<Item> items = tradeList.getData().getItems().stream().filter(u -> !"failed".equals(u.getStatus()) && !"pay_failed".equals(u.getStatus())).collect(Collectors.toList());
+        for (int i = 0; i < items.size(); i++) {
+            // 已导入订单
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("out_id", items.get(i).getOrderId());
+            List<EtfGridEntity> gridEntityList = etfGridService.queryList(params);
+            if (!CollectionUtils.isEmpty(gridEntityList)) {
+                continue;
+            }
+            DanJuanModel orderInfo = danJuanService.getOrderInfo(items.get(i).getOrderId(), cookieParams);
+            importDanJuanData(orderInfo);
+        }
+        return "成功";
+
+    }
 }

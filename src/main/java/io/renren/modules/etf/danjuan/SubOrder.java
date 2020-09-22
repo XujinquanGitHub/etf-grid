@@ -1,5 +1,5 @@
 
-package io.renren.modules.etf;
+package io.renren.modules.etf.danjuan;
 
 import lombok.Data;
 
