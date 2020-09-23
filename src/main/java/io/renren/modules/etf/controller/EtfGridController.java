@@ -109,7 +109,7 @@ public class EtfGridController {
                         entity.setSellAmount(sellAmount);
                         entity.setProfitRate(divide);
                         entity.setProfit(sellAmount.subtract(etfGridEntity.getBuyAmount()));
-                        entity.setOperationString("卖出份额:" + entity.getNum() + "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
+                        entity.setOperationString("卖出金额:" + entity.getSellAmount() +  "   卖出份额：" + entity.getNum() + "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
                         updateList.add(entity);
                         // 将这一网格设置为计划卖出
                         EtfGridEntity updateModel = new EtfGridEntity();

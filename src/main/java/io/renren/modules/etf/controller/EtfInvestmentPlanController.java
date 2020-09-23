@@ -11,6 +11,7 @@ import com.alibaba.fastjson.JSON;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,6 +60,9 @@ public class EtfInvestmentPlanController {
     @RequestMapping("/save")
     public R save(@RequestBody EtfInvestmentPlanEntity etfInvestmentPlan) {
         FundModel fundModel = etfInvestmentPlanService.getFundInfo(etfInvestmentPlan.getFundNo());
+        if (StringUtils.isBlank(etfInvestmentPlan.getName())) {
+            etfInvestmentPlan.setName(fundModel.getName() + "投资计划");
+        }
         etfInvestmentPlan.setFundName(fundModel.getName());
         etfInvestmentPlan.setInitPrice(fundModel.getGsz());
         etfInvestmentPlan.setCurrentPrice(fundModel.getGsz());
