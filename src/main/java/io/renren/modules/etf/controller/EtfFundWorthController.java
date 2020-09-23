@@ -71,8 +71,6 @@ public class EtfFundWorthController {
         return R.ok();
     }
 
-    public static void main(String[] args) {
-        System.out.println(new BigDecimal("-12.525").toString());
-    }
+  
 
 }
