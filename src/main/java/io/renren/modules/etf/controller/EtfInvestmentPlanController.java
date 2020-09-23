@@ -34,7 +34,7 @@ public class EtfInvestmentPlanController {
     private EtfInvestmentPlanService etfInvestmentPlanService;
 
     /**
-     * 列表
+     * 列表 净值
      */
     @RequestMapping("/list")
     public R list(@RequestParam Map<String, Object> params) {
