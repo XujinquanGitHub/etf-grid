@@ -77,7 +77,9 @@ public class EtfInvestmentPlanEntity extends Model<EtfInvestmentPlanEntity> impl
 	 */
 	private Integer buyType;
 
-
-
+	/**
+	 * 操作方式 1、正常买卖 2、只买不卖 3、只卖不买 4、终止计划,
+	 */
+	private Integer planOperationType;
 
 }

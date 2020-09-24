@@ -94,83 +94,87 @@ public class EtfGridController {
         BigDecimal totalBuyAmount = new BigDecimal(0);
         BigDecimal totalSellAmount = new BigDecimal(0);
         for (EtfInvestmentPlanEntity plan : list) {
-            List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(collect)) {
-                FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo());
-                if (type == null || type == 0) {
-                    for (int i = 0; i < collect.size(); i++) {
-                        EtfGridEntity etfGridEntity = collect.get(i);
-                        // 当前价格减去买入价格
-                        BigDecimal subtract = fundInfo.getGsz().subtract(etfGridEntity.getBuyPrice());
-                        BigDecimal divide = subtract.divide(etfGridEntity.getBuyPrice(), 6, BigDecimal.ROUND_HALF_UP);
-                        System.out.println("涨幅：" + divide.multiply(new BigDecimal(100)).toString() + "%  赚:" + etfGridEntity.getBuyAmount().multiply(divide));
-                        divide = divide.multiply(new BigDecimal(100));
-                        if (divide.compareTo(plan.getRiseRange()) > 0) {
-                            OperationModel entity = new OperationModel();
-                            BeanUtils.copyProperties(etfGridEntity, entity);
-                            entity.setName(fundInfo.getName());
-                            entity.setFundNo(fundInfo.getFundcode());
-                            entity.setSellPrice(fundInfo.getGsz());
-                            BigDecimal sellAmount = fundInfo.getGsz().multiply(etfGridEntity.getNum());
-                            entity.setSellAmount(sellAmount);
-                            entity.setProfitRate(divide);
-                            entity.setProfit(sellAmount.subtract(etfGridEntity.getBuyAmount()));
-                            entity.setOperationString("卖出金额:" + entity.getSellAmount() + "   卖出份额：" + entity.getNum() + "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
-                            totalSellAmount = totalSellAmount.add(entity.getSellAmount());
-                            updateList.add(entity);
-                            // 将这一网格设置为计划卖出
-                            EtfGridEntity updateModel = new EtfGridEntity();
-                            updateModel.setId(entity.getId());
-                            updateModel.setStatus(2);
-                        }
-                    }
-                }
-
-                if (type == null || type == 1) {
-                    EtfGridEntity etfGridEntity = collect.stream().min(Comparator.comparingDouble(u -> new Double(u.getBuyPrice().toString()))).get();
-                    BigDecimal referencePrice = etfGridEntity.getBuyPrice();
-                    if (plan.getBuyType() == 1) {
-                        etfGridEntity = collect.stream().max(Comparator.comparingInt(u -> u.getId())).get();
-                        referencePrice = etfGridEntity.getBuyPrice();
-                    }
-                    // 现在价格比买入时低
-                    if (fundInfo.getGsz().compareTo(referencePrice) < 0) {
-                        // 计算差价
-                        BigDecimal subtract = referencePrice.subtract(fundInfo.getGsz());
-                        // 计算亏损率
-                        BigDecimal divide = subtract.divide(referencePrice, 6, BigDecimal.ROUND_HALF_UP);
-                        divide = divide.multiply(new BigDecimal(100));
-                        if (divide.compareTo(plan.getFallRange()) > 0) {
-                            OperationModel entity = new OperationModel();
-                            entity.setName(fundInfo.getName());
-                            entity.setFundNo(fundInfo.getFundcode());
-                            // 计算买入金额，用最低点的亏损率除以计划的亏损率乘以单批金额
-                            BigDecimal amount = divide.divide(plan.getFallRange(), 6, BigDecimal.ROUND_HALF_UP).multiply(plan.getSingleAmount());
-                            entity.setBuyAmount(amount);
-                            entity.setOperationString("买入金额:" + entity.getBuyAmount());
-                            // 将这一网格设置为计划买入 加上
-//                            entity.setStatus(0);
-                            entity.setPlanId(plan.getId());
-                            entity.setBuyTime(new Date());
-                            updateList.add(entity);
-
-                            totalBuyAmount = totalBuyAmount.add(amount);
-
-                            // 查询同一基金是否有未买入的网格，如果没有添加一网待卖入
-                            List<EtfGridEntity> unBuyList = gridEntityList.stream().filter(u -> u.getStatus().equals(0) && fundInfo.getFundcode().equals(u.getFundNo())).collect(Collectors.toList());
-                            if (CollectionUtils.isEmpty(unBuyList)) {
-                                //删除自动插入，不然重复请求容易重复插入
-//                            entity.insert();
-                            }
-
-                            // todo: 添加一个接口，定时任务在晚上11点将基金净值和份额添加进去
-
-                        }
-                    }
-                }
-
-
+            if (plan.getPlanOperationType() == 4) {
+                continue;
             }
+            List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(collect)) {
+                continue;
+            }
+            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo());
+            if ((type == null || type == 0) && (plan.getPlanOperationType() == 1 || plan.getPlanOperationType() == 3)) {
+                for (int i = 0; i < collect.size(); i++) {
+                    EtfGridEntity etfGridEntity = collect.get(i);
+                    // 当前价格减去买入价格
+                    BigDecimal subtract = fundInfo.getGsz().subtract(etfGridEntity.getBuyPrice());
+                    BigDecimal divide = subtract.divide(etfGridEntity.getBuyPrice(), 6, BigDecimal.ROUND_HALF_UP);
+                    System.out.println("涨幅：" + divide.multiply(new BigDecimal(100)).toString() + "%  赚:" + etfGridEntity.getBuyAmount().multiply(divide));
+                    divide = divide.multiply(new BigDecimal(100));
+                    if (divide.compareTo(plan.getRiseRange()) > 0) {
+                        OperationModel entity = new OperationModel();
+                        BeanUtils.copyProperties(etfGridEntity, entity);
+                        entity.setName(fundInfo.getName());
+                        entity.setFundNo(fundInfo.getFundcode());
+                        entity.setSellPrice(fundInfo.getGsz());
+                        BigDecimal sellAmount = fundInfo.getGsz().multiply(etfGridEntity.getNum());
+                        entity.setSellAmount(sellAmount);
+                        entity.setProfitRate(divide);
+                        entity.setProfit(sellAmount.subtract(etfGridEntity.getBuyAmount()));
+                        entity.setOperationString("卖出金额:" + entity.getSellAmount() + "   卖出份额：" + entity.getNum() + "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
+                        totalSellAmount = totalSellAmount.add(entity.getSellAmount());
+                        updateList.add(entity);
+                        // 将这一网格设置为计划卖出
+                        EtfGridEntity updateModel = new EtfGridEntity();
+                        updateModel.setId(entity.getId());
+                        updateModel.setStatus(2);
+                    }
+                }
+            }
+
+            if ((type == null || type == 1) && (plan.getPlanOperationType() == 1 || plan.getPlanOperationType() == 2)) {
+                EtfGridEntity etfGridEntity = collect.stream().min(Comparator.comparingDouble(u -> new Double(u.getBuyPrice().toString()))).get();
+                BigDecimal referencePrice = etfGridEntity.getBuyPrice();
+                if (plan.getBuyType() == 1) {
+                    etfGridEntity = collect.stream().max(Comparator.comparingInt(u -> u.getId())).get();
+                    referencePrice = etfGridEntity.getBuyPrice();
+                }
+                // 现在价格比买入时低
+                if (fundInfo.getGsz().compareTo(referencePrice) < 0) {
+                    // 计算差价
+                    BigDecimal subtract = referencePrice.subtract(fundInfo.getGsz());
+                    // 计算亏损率
+                    BigDecimal divide = subtract.divide(referencePrice, 6, BigDecimal.ROUND_HALF_UP);
+                    divide = divide.multiply(new BigDecimal(100));
+                    if (divide.compareTo(plan.getFallRange()) > 0) {
+                        OperationModel entity = new OperationModel();
+                        entity.setName(fundInfo.getName());
+                        entity.setFundNo(fundInfo.getFundcode());
+                        // 计算买入金额，用最低点的亏损率除以计划的亏损率乘以单批金额
+                        BigDecimal amount = divide.divide(plan.getFallRange(), 6, BigDecimal.ROUND_HALF_UP).multiply(plan.getSingleAmount());
+                        entity.setBuyAmount(amount);
+                        entity.setOperationString("买入金额:" + entity.getBuyAmount());
+                        // 将这一网格设置为计划买入 加上
+//                            entity.setStatus(0);
+                        entity.setPlanId(plan.getId());
+                        entity.setBuyTime(new Date());
+                        updateList.add(entity);
+
+                        totalBuyAmount = totalBuyAmount.add(amount);
+
+                        // 查询同一基金是否有未买入的网格，如果没有添加一网待卖入
+                        List<EtfGridEntity> unBuyList = gridEntityList.stream().filter(u -> u.getStatus().equals(0) && fundInfo.getFundcode().equals(u.getFundNo())).collect(Collectors.toList());
+                        if (CollectionUtils.isEmpty(unBuyList)) {
+                            //删除自动插入，不然重复请求容易重复插入
+//                            entity.insert();
+                        }
+
+                        // todo: 添加一个接口，定时任务在晚上11点将基金净值和份额添加进去
+
+                    }
+                }
+            }
+
+
         }
 
         return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("updateList", updateList);
