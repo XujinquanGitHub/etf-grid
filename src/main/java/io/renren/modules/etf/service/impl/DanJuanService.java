@@ -52,7 +52,7 @@ public class DanJuanService {
     }
 
     public DanJuanWorthInfo getFundWorth(String fundNo, String cookies) {
-        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/fund/nav/history/" + fundNo + "?size=30");
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/fund/nav/history/" + fundNo + "?size=10000");
         get.addHeaders(getHead(cookies));
         String body = get.execute().body();
         System.out.println("请求净值：" + body);

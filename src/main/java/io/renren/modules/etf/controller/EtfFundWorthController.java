@@ -1,29 +1,25 @@
 package io.renren.modules.etf.controller;
 
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.alibaba.fastjson.JSONObject;
+import io.renren.common.utils.PageUtils;
+import io.renren.common.utils.R;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
-import io.renren.modules.etf.danjuan.worth.Data;
 import io.renren.modules.etf.danjuan.worth.Item;
 import io.renren.modules.etf.entity.EtfFundWorthEntity;
 import io.renren.modules.etf.service.EtfFundWorthService;
 import io.renren.modules.etf.service.impl.DanJuanService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.renren.common.utils.PageUtils;
-import io.renren.common.utils.R;
+import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -63,7 +59,7 @@ public class EtfFundWorthController {
         if (!etfFundWorthService.isExit(fundNo)) {
             DanJuanWorthInfo fundWorth = danJuanService.getFundWorth(fundNo, null);
             List<Item> items = fundWorth.getData().getItems();
-            if (!CollectionUtils.isEmpty(items)){
+            if (!CollectionUtils.isEmpty(items)) {
                 List<EtfFundWorthEntity> collect = items.stream().map(u -> new EtfFundWorthEntity().setFundDate(u.getDate()).setFundNo(fundNo).setPercentage(u.getPercentage()).setWorth(u.getValue())).collect(Collectors.toList());
                 etfFundWorthService.saveBatch(collect);
             }
@@ -71,6 +67,18 @@ public class EtfFundWorthController {
         return R.ok();
     }
 
-  
+    @RequestMapping("/maximumDrawdown")
+    public String maximumDrawdown(@RequestParam String fundNo) {
+        List<EtfFundWorthEntity> worthEntityList = etfFundWorthService.getListByFundNo(fundNo);
+        if (CollectionUtils.isEmpty(worthEntityList)) {
+            return "未导入基金净值，请先导入基金净值";
+        }
+        worthEntityList = worthEntityList.stream().sorted(Comparator.comparing(EtfFundWorthEntity::getFundDate).reversed()).collect(Collectors.toList());
+        BigDecimal maximum=new BigDecimal(0);
+        for (EtfFundWorthEntity wo : worthEntityList) {
+            BigDecimal add = maximum.add(wo.getPercentage());
+        }
+        return "";
+    }
 
 }

@@ -7,6 +7,7 @@ import io.renren.modules.etf.service.EtfFundWorthService;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -33,6 +34,12 @@ public class EtfFundWorthServiceImpl extends ServiceImpl<EtfFundWorthDao, EtfFun
         return getOne(queryWrapper) != null;
 
     }
+    @Override
+    public List<EtfFundWorthEntity> getListByFundNo(String fundNo) {
+        LambdaQueryWrapper<EtfFundWorthEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(EtfFundWorthEntity::getFundNo, fundNo);
+        return list(queryWrapper);
 
+    }
 
 }

@@ -248,6 +248,8 @@ public class EtfGridController {
     @Autowired
     private DanJuanService danJuanService;
 
+
+    // 导入蛋卷的买入记录
     @RequestMapping("/importDanJuanDataList")
     public String importDanJuanDataList(@RequestParam String zCode, @RequestParam String fundCode, @RequestHeader String cookieParams) {
         if (StringUtils.isBlank(cookieParams)) {
