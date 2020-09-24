@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import com.google.gson.JsonObject;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
 import io.renren.modules.etf.danjuan.Data;
@@ -18,6 +19,7 @@ import io.renren.modules.etf.service.EtfGridService;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
 import io.renren.modules.etf.service.impl.DanJuanService;
 import org.apache.commons.lang.StringUtils;
+import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -80,7 +82,7 @@ public class EtfGridController {
     }
 
     @RequestMapping("/selectPrice")
-    public List<OperationModel> selectPrice(@RequestParam(required = false) String fundNoListString, @RequestParam(required = false) Integer type) {
+    public com.alibaba.fastjson.JSONObject selectPrice(@RequestParam(required = false) String fundNoListString, @RequestParam(required = false) Integer type) {
         // type 为1查询买入操作  为0时查询卖出。为空查询所有
         List<OperationModel> updateList = new ArrayList<>();
         List<EtfInvestmentPlanEntity> list = etfInvestmentPlanService.list();
@@ -89,6 +91,8 @@ public class EtfGridController {
             List<String> fundNoList = Arrays.asList(fundNoListString.split(","));
             list = list.stream().filter(u -> fundNoList.contains(u.getFundNo())).collect(Collectors.toList());
         }
+        BigDecimal totalBuyAmount = new BigDecimal(0);
+        BigDecimal totalSellAmount = new BigDecimal(0);
         for (EtfInvestmentPlanEntity plan : list) {
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(collect)) {
@@ -112,6 +116,7 @@ public class EtfGridController {
                             entity.setProfitRate(divide);
                             entity.setProfit(sellAmount.subtract(etfGridEntity.getBuyAmount()));
                             entity.setOperationString("卖出金额:" + entity.getSellAmount() + "   卖出份额：" + entity.getNum() + "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
+                            totalSellAmount = totalSellAmount.add(entity.getSellAmount());
                             updateList.add(entity);
                             // 将这一网格设置为计划卖出
                             EtfGridEntity updateModel = new EtfGridEntity();
@@ -143,10 +148,12 @@ public class EtfGridController {
                             BigDecimal amount = divide.divide(plan.getFallRange(), 6, BigDecimal.ROUND_HALF_UP).multiply(plan.getSingleAmount());
                             entity.setBuyAmount(amount);
                             entity.setOperationString("买入金额:" + entity.getBuyAmount());
-                            // 将这一网格设置为计划买入
+                            // 将这一网格设置为计划买入 加上
                             entity.setStatus(0);
                             entity.setPlanId(plan.getId());
                             updateList.add(entity);
+
+                            totalBuyAmount = totalBuyAmount.add(amount);
 
                             // 查询同一基金是否有未买入的网格，如果没有添加一网待卖入
                             List<EtfGridEntity> unBuyList = gridEntityList.stream().filter(u -> u.getStatus().equals(0) && fundInfo.getFundcode().equals(u.getFundNo())).collect(Collectors.toList());
@@ -164,7 +171,8 @@ public class EtfGridController {
 
             }
         }
-        return updateList;
+
+        return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("updateList", updateList);
     }
 
 
