@@ -158,9 +158,10 @@ CREATE TABLE `etf_investment_plan` (
   `fall_range` decimal(20,5) DEFAULT NULL COMMENT '跌幅度到多少时通知用户',
   `receive_mail` varchar(200) DEFAULT NULL COMMENT '接收通知的邮件',
   `inspect_time` time DEFAULT NULL COMMENT '每个交易日检查时间',
+  `buy_type` tinyint DEFAULT '2' COMMENT '买入计算点 1、按最后一次买入做为参考点  2、按买入记录的最低点做为参考',
+  `plan_operation_type` tinyint DEFAULT '1' COMMENT '操作方式 1、正常买卖 2、只买不卖 3、只卖不买 4、终止计划',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 CREATE TABLE `etf_grid` (
@@ -180,7 +181,7 @@ CREATE TABLE `etf_grid` (
   `status` tinyint NOT NULL DEFAULT '1' COMMENT '0、计划买入 1、买入  2、待卖出 3、已卖出',
   `out_id` varchar(50) DEFAULT NULL COMMENT '外部导入ID，避免重复导入',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=123 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=199 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 -- 初始数据 
