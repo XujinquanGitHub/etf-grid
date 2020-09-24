@@ -15,6 +15,7 @@ spring:
     active: dev
   # jackson时间格式化
   jackson:
+    default-property-inclusion: non_null
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
   servlet:

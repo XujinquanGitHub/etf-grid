@@ -149,8 +149,9 @@ public class EtfGridController {
                             entity.setBuyAmount(amount);
                             entity.setOperationString("买入金额:" + entity.getBuyAmount());
                             // 将这一网格设置为计划买入 加上
-                            entity.setStatus(0);
+//                            entity.setStatus(0);
                             entity.setPlanId(plan.getId());
+                            entity.setBuyTime(new Date());
                             updateList.add(entity);
 
                             totalBuyAmount = totalBuyAmount.add(amount);
