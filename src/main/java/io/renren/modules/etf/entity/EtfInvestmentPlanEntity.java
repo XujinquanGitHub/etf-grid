@@ -72,4 +72,12 @@ public class EtfInvestmentPlanEntity extends Model<EtfInvestmentPlanEntity> impl
 	 */
 	private Time inspectTime;
 
+	/**
+	 * 买入计算点 1、按最后一次买入做为参考点 2、按买入记录的最低点做为参考
+	 */
+	private Integer buyType;
+
+
+
+
 }

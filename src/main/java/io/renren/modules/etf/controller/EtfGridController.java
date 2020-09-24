@@ -123,12 +123,17 @@ public class EtfGridController {
 
                 if (type == null || type == 1) {
                     EtfGridEntity etfGridEntity = collect.stream().min(Comparator.comparingDouble(u -> new Double(u.getBuyPrice().toString()))).get();
+                    BigDecimal referencePrice = etfGridEntity.getBuyPrice();
+                    if (plan.getBuyType() == 1) {
+                        etfGridEntity = collect.stream().max(Comparator.comparingInt(u -> u.getId())).get();
+                        referencePrice = etfGridEntity.getBuyPrice();
+                    }
                     // 现在价格比买入时低
-                    if (fundInfo.getGsz().compareTo(etfGridEntity.getBuyPrice()) < 0) {
+                    if (fundInfo.getGsz().compareTo(referencePrice) < 0) {
                         // 计算差价
-                        BigDecimal subtract = etfGridEntity.getBuyPrice().subtract(fundInfo.getGsz());
+                        BigDecimal subtract = referencePrice.subtract(fundInfo.getGsz());
                         // 计算亏损率
-                        BigDecimal divide = subtract.divide(etfGridEntity.getBuyPrice(), 6, BigDecimal.ROUND_HALF_UP);
+                        BigDecimal divide = subtract.divide(referencePrice, 6, BigDecimal.ROUND_HALF_UP);
                         divide = divide.multiply(new BigDecimal(100));
                         if (divide.compareTo(plan.getFallRange()) > 0) {
                             OperationModel entity = new OperationModel();
