@@ -9,10 +9,13 @@ import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
 import io.renren.modules.etf.danjuan.fund.Data;
 import io.renren.modules.etf.danjuan.fund.FundDerived;
+import io.renren.modules.etf.danjuan.index.Datum;
+import io.renren.modules.etf.danjuan.index.IndexUpsAndDowns;
 import io.renren.modules.etf.dao.EtfInvestmentPlanDao;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,7 @@ import java.rmi.server.ExportException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -57,7 +61,7 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
 
 
     @Override
-    public FundModel getFundInfo(String fundNo) {
+    public FundModel getFundInfo(String fundNo, String indexNo) {
         FundModel result = null;
         try {
             result = getFundInfoByTianTian(fundNo);
@@ -69,6 +73,24 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
                 FundDerived fundDerived = data.getFundDerived();
                 // 从蛋卷获取到的是前一个交易日的净值
                 result = new FundModel().setFundcode(fundNo).setName(data.getFdName()).setGsz(fundDerived.getUnit_nav());
+                if (StringUtils.isNotBlank(indexNo)) {
+                    IndexUpsAndDowns mainIndexChanges = danJuanService.getMainIndexChanges();
+                    Optional<Datum> first = mainIndexChanges.getData().stream().filter(u -> indexNo.equals(u.getSymbol())).findFirst();
+                    if (!first.isPresent()) {
+                        IndexUpsAndDowns industryIndexChanges = danJuanService.getIndustryIndexChanges();
+                        first = industryIndexChanges.getData().stream().filter(u -> indexNo.equals(u.getSymbol())).findFirst();
+                    }
+                    if (first.isPresent()) {
+                        Datum datum = first.get();
+                        BigDecimal pr = new BigDecimal(datum.getPercentage()).divide(new BigDecimal(100), 6, BigDecimal.ROUND_HALF_UP);
+                        result.setPercentage(pr);
+                        BigDecimal amountPercent = new BigDecimal(1).add(pr);
+                        log.debug("指数情况：" + JSONUtil.toJsonStr(datum));
+                        log.debug("涨跌幅度：" + amountPercent);
+                        BigDecimal newPrice = fundDerived.getUnit_nav().multiply(amountPercent);
+                        result.setGsz(newPrice);
+                    }
+                }
             } catch (Exception exs) {
                 System.out.println(exs.toString());
                 result = new FundModel().setFundcode(fundNo).setGsz(new BigDecimal(1));

@@ -82,4 +82,9 @@ public class EtfInvestmentPlanEntity extends Model<EtfInvestmentPlanEntity> impl
 	 */
 	private Integer planOperationType;
 
+	/**
+	 * 基金对应的指数号
+	 */
+	private String indexNo;
+
 }

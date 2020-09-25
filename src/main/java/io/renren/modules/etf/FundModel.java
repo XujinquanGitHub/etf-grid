@@ -30,4 +30,9 @@ public class FundModel {
 
     // 时间
     private String gztime;
+
+
+    // 百分比，只有在天天基金获取不到数据时，将从蛋卷获取计划中绑定的指数涨跌百分比
+    private BigDecimal percentage;
+
 }

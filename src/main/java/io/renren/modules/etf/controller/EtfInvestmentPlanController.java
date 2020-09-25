@@ -59,7 +59,7 @@ public class EtfInvestmentPlanController {
      */
     @RequestMapping("/save")
     public R save(@RequestBody EtfInvestmentPlanEntity etfInvestmentPlan) {
-        FundModel fundModel = etfInvestmentPlanService.getFundInfo(etfInvestmentPlan.getFundNo());
+        FundModel fundModel = etfInvestmentPlanService.getFundInfo(etfInvestmentPlan.getFundNo(),etfInvestmentPlan.getIndexNo());
         if (StringUtils.isBlank(etfInvestmentPlan.getName())) {
             etfInvestmentPlan.setName(fundModel.getName() + "投资计划");
         }

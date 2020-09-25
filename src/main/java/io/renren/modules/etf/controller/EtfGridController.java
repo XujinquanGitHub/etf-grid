@@ -125,7 +125,7 @@ public class EtfGridController {
             if (CollectionUtils.isEmpty(collect)) {
                 continue;
             }
-            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo());
+            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(),plan.getIndexNo());
             if ((type == null || type == 0) && (plan.getPlanOperationType() == 1 || plan.getPlanOperationType() == 3)) {
                 for (int i = 0; i < collect.size(); i++) {
                     EtfGridEntity etfGridEntity = collect.get(i);
@@ -144,7 +144,7 @@ public class EtfGridController {
                         entity.setSellAmount(sellAmount);
                         entity.setProfitRate(divide);
                         entity.setProfit(sellAmount.subtract(etfGridEntity.getBuyAmount()));
-                        entity.setOperationString("卖出金额:" + entity.getSellAmount() + "   卖出份额：" + entity.getNum() + "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
+                        entity.setOperationString("   卖出份额：" + entity.getNum() + "   买入金额：" + entity.getBuyAmount() + "    卖出金额:" + entity.getSellAmount() +  "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
                         totalSellAmount = totalSellAmount.add(entity.getSellAmount());
                         updateList.add(entity);
                         // 将这一网格设置为计划卖出
@@ -234,7 +234,7 @@ public class EtfGridController {
             planEntity.setFallRange(new BigDecimal(1));
             planEntity.setRiseRange(new BigDecimal(10));
             planEntity.setSingleAmount(new BigDecimal(1000));
-            FundModel fundModel = etfInvestmentPlanService.getFundInfo(data.getFd_code());
+            FundModel fundModel = etfInvestmentPlanService.getFundInfo(data.getFd_code(),planEntity.getIndexNo());
             planEntity.setFundName(fundModel.getName());
             planEntity.setInitPrice(fundModel.getGsz());
             planEntity.setFundNo(data.getFd_code());

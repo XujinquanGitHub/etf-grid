@@ -160,8 +160,9 @@ CREATE TABLE `etf_investment_plan` (
   `inspect_time` time DEFAULT NULL COMMENT '每个交易日检查时间',
   `buy_type` tinyint DEFAULT '2' COMMENT '买入计算点 1、按最后一次买入做为参考点  2、按买入记录的最低点做为参考',
   `plan_operation_type` tinyint DEFAULT '1' COMMENT '操作方式 1、正常买卖 2、只买不卖 3、只卖不买 4、终止计划',
+  `index_no` varchar(20) DEFAULT NULL COMMENT '基金对应的指数号',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 CREATE TABLE `etf_grid` (
