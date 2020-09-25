@@ -1,11 +1,16 @@
 package io.renren.modules.etf.controller;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import com.alibaba.fastjson.JSON;
 import com.google.gson.JsonObject;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
@@ -13,6 +18,7 @@ import io.renren.modules.etf.danjuan.Data;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.OperationModel;
 import io.renren.modules.etf.danjuan.Item;
+import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
 import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfGridService;
@@ -71,6 +77,24 @@ public class EtfGridController {
         etfGridService.save(etfGrid);
         return R.ok();
     }
+
+    @RequestMapping("/saveYesterday")
+    public String saveYesterday(@RequestBody EtfGridEntity etfGrid) {
+        EtfInvestmentPlanEntity planEntity = etfInvestmentPlanService.getById(etfGrid.getPlanId());
+        DanJuanWorthInfo fundWorth = danJuanService.getFundWorth(planEntity.getFundNo(), "", 10);
+        List<io.renren.modules.etf.danjuan.worth.Item> items = fundWorth.getData().getItems();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        List<io.renren.modules.etf.danjuan.worth.Item> collect = items.stream().filter(u -> DateUtil.formatDate(u.getDate()).equals(LocalDateTime.now().minus(1, ChronoUnit.DAYS).format(formatter))).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(collect)) {
+            etfGrid.setBuyPrice(collect.get(0).getValue());
+            etfGrid.setBuyTime(collect.get(0).getDate());
+            etfGrid.setNum(etfGrid.getBuyAmount().divide(etfGrid.getBuyPrice(), 2, BigDecimal.ROUND_HALF_UP));
+            etfGridService.save(etfGrid);
+            return JSON.toJSONString(etfGrid);
+        }
+        return "失败";
+    }
+
 
     /**
      * 卖出一份
