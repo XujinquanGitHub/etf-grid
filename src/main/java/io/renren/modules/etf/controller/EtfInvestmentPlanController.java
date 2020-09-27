@@ -1,5 +1,6 @@
 package io.renren.modules.etf.controller;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +12,7 @@ import com.alibaba.fastjson.JSON;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
+import io.renren.modules.etf.service.impl.SwService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,9 @@ import io.renren.common.utils.R;
 public class EtfInvestmentPlanController {
     @Autowired
     private EtfInvestmentPlanService etfInvestmentPlanService;
+
+    @Autowired
+    private SwService swService;
 
     /**
      * 列表 净值
@@ -59,7 +64,7 @@ public class EtfInvestmentPlanController {
      */
     @RequestMapping("/save")
     public R save(@RequestBody EtfInvestmentPlanEntity etfInvestmentPlan) {
-        FundModel fundModel = etfInvestmentPlanService.getFundInfo(etfInvestmentPlan.getFundNo(),etfInvestmentPlan.getIndexNo());
+        FundModel fundModel = etfInvestmentPlanService.getFundInfo(etfInvestmentPlan.getFundNo(), etfInvestmentPlan.getIndexNo());
         if (StringUtils.isBlank(etfInvestmentPlan.getName())) {
             etfInvestmentPlan.setName(fundModel.getName() + "投资计划");
         }
@@ -84,14 +89,11 @@ public class EtfInvestmentPlanController {
     }
 
     /**
-     * 删除
+     * 获取申万一级行业指数
      */
-    @RequestMapping("/delete")
-    @RequiresPermissions("generator:etfinvestmentplan:delete")
-    public R delete(@RequestBody Integer[] ids) {
-        etfInvestmentPlanService.removeByIds(Arrays.asList(ids));
-
-        return R.ok();
+    @RequestMapping("/getAllIndustryIndexes")
+    public String getAllIndustryIndexes() throws Exception {
+        return JSON.toJSONString(swService.getAllIndustryIndexes());
     }
 
 }

@@ -7,6 +7,7 @@ import com.alibaba.fastjson.JSON;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
 import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
+import io.renren.modules.etf.danjuan.fund.detail.FundDetails;
 import io.renren.modules.etf.danjuan.index.IndexUpsAndDowns;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
 import org.apache.commons.lang.StringUtils;
@@ -24,6 +25,8 @@ import java.util.Map;
  **/
 @Service
 public class DanJuanService {
+
+    private Map<String, FundDetails> industryProportionMap = new HashMap<>();
 
     public DanJuanTradeList getTradeList(String zCode, String fundCode, String cookies) {
 
@@ -50,6 +53,19 @@ public class DanJuanService {
         System.out.println("请求指数涨跌：" + body);
         return JSON.parseObject(body, IndexUpsAndDowns.class);
     }
+
+    public FundDetails getFundDetails(String fundNo, String cookies) {
+        FundDetails fundDetails = industryProportionMap.get(fundNo);
+        if (fundDetails != null) {
+            return fundDetails;
+        }
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/fund/detail/" + fundNo);
+        get.addHeaders(getHead(cookies));
+        String body = get.execute().body();
+        System.out.println("基金详情：" + body);
+        return JSON.parseObject(body, FundDetails.class);
+    }
+
 
     public IndexUpsAndDowns getMainIndexChanges() {
         return getIndexUpsAndDowns("zyzs", null);

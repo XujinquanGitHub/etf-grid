@@ -12,18 +12,24 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.gson.JsonObject;
+import io.renren.modules.etf.StockModel;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
 import io.renren.modules.etf.danjuan.Data;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.OperationModel;
 import io.renren.modules.etf.danjuan.Item;
+import io.renren.modules.etf.danjuan.fund.detail.AchievementList;
+import io.renren.modules.etf.danjuan.fund.detail.FundDetails;
+import io.renren.modules.etf.danjuan.fund.detail.ManagerList;
+import io.renren.modules.etf.danjuan.fund.detail.StockList;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
 import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfGridService;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
 import io.renren.modules.etf.service.impl.DanJuanService;
+import io.renren.modules.etf.service.impl.SwService;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
@@ -125,7 +131,7 @@ public class EtfGridController {
             if (CollectionUtils.isEmpty(collect)) {
                 continue;
             }
-            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(),plan.getIndexNo());
+            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
             if ((type == null || type == 0) && (plan.getPlanOperationType() == 1 || plan.getPlanOperationType() == 3)) {
                 for (int i = 0; i < collect.size(); i++) {
                     EtfGridEntity etfGridEntity = collect.get(i);
@@ -144,7 +150,7 @@ public class EtfGridController {
                         entity.setSellAmount(sellAmount);
                         entity.setProfitRate(divide);
                         entity.setProfit(sellAmount.subtract(etfGridEntity.getBuyAmount()));
-                        entity.setOperationString("   卖出份额：" + entity.getNum() + "   买入金额：" + entity.getBuyAmount() + "    卖出金额:" + entity.getSellAmount() +  "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
+                        entity.setOperationString("   卖出份额：" + entity.getNum() + "   买入金额：" + entity.getBuyAmount() + "    卖出金额:" + entity.getSellAmount() + "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
                         totalSellAmount = totalSellAmount.add(entity.getSellAmount());
                         updateList.add(entity);
                         // 将这一网格设置为计划卖出
@@ -234,7 +240,7 @@ public class EtfGridController {
             planEntity.setFallRange(new BigDecimal(1));
             planEntity.setRiseRange(new BigDecimal(10));
             planEntity.setSingleAmount(new BigDecimal(1000));
-            FundModel fundModel = etfInvestmentPlanService.getFundInfo(data.getFd_code(),planEntity.getIndexNo());
+            FundModel fundModel = etfInvestmentPlanService.getFundInfo(data.getFd_code(), planEntity.getIndexNo());
             planEntity.setFundName(fundModel.getName());
             planEntity.setInitPrice(fundModel.getGsz());
             planEntity.setFundNo(data.getFd_code());
@@ -268,6 +274,33 @@ public class EtfGridController {
         gridEntity.insert();
         return "成功";
     }
+
+    @RequestMapping("/selectFundDetail")
+    public com.alibaba.fastjson.JSONObject selectFundDetail(@RequestParam String fundNO) throws Exception {
+        FundDetails fundDetails = danJuanService.getFundDetails(fundNO, "");
+        List<StockModel> allIndustryIndexes = swService.getAllIndustryIndexes();
+        List<StockList> stockList = fundDetails.getData().getFundPosition().getStockList();
+        Map<String, BigDecimal> industryProportion = fundDetails.getData().getIndustryProportion();
+
+        for (StockList st : stockList) {
+            Optional<StockModel> first = allIndustryIndexes.stream().filter(u -> u.getStockCode().equals(st.getCode())).findFirst();
+            if (!first.isPresent()) {
+                industryProportion.put(st.getName(), new BigDecimal(st.getPercent()));
+            }
+            StockModel stockModel = first.get();
+            BigDecimal bigDecimal = industryProportion.get(stockModel.getIndustryName());
+            if (bigDecimal == null) {
+                bigDecimal = new BigDecimal(0);
+            }
+            industryProportion.put(stockModel.getIndustryName(), bigDecimal.add(new BigDecimal(st.getPercent())));
+        }
+        List<ManagerList> managerList = fundDetails.getData().getManagerList();
+        AchievementList achievementList = managerList.stream().flatMap(u -> u.getAchievementList().stream()).filter(u -> u.getFundCode().equals(fundNO)).findFirst().get();
+        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比",fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("行业占比",industryProportion);
+    }
+
+    @Autowired
+    private SwService swService;
 
     @Autowired
     private DanJuanService danJuanService;
