@@ -310,7 +310,8 @@ public class EtfGridController {
         fundDetails.getData().setIndustryProportion(industryProportion);
         List<ManagerList> managerList = fundDetails.getData().getManagerList();
         AchievementList achievementList = managerList.stream().flatMap(u -> u.getAchievementList().stream()).filter(u -> u.getFundCode().equals(fundNO)).findFirst().get();
-        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比", fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("前十大股票行业占比", map);
+        Map<String, Double> collect = stockList.stream().collect(Collectors.toMap(u -> u.getName(), u -> u.getPercent()));
+        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比", fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("前十大股票行业占比", map).fluentPut("前十大股票占比", collect);
     }
 
     @Autowired
