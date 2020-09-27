@@ -9,6 +9,7 @@ import io.renren.modules.etf.danjuan.DanJuanTradeList;
 import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
 import io.renren.modules.etf.danjuan.fund.detail.FundDetails;
 import io.renren.modules.etf.danjuan.index.IndexUpsAndDowns;
+import io.renren.modules.etf.danjuan.trade.SingleFundTradeList;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
@@ -37,14 +38,32 @@ public class DanJuanService {
         return JSON.parseObject(body, DanJuanTradeList.class);
     }
 
+    public SingleFundTradeList getSingleFundTradeList(String fundCode, String cookies) {
 
-    public DanJuanModel getOrderInfo(String orderId, String cookies) {
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/order/p/" + fundCode + "/list?page=1&size=200&type=all");
+        get.addHeaders(getHead(cookies));
+        String body = get.execute().body();
+        System.out.println("请求结果：" + body);
+        return JSON.parseObject(body, SingleFundTradeList.class);
+    }
+
+
+    public DanJuanModel getOrderInfoByPlan(String orderId, String cookies) {
         HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/plan/order/" + orderId);
         get.addHeaders(getHead(cookies));
         String body = get.execute().body();
         System.out.println("请求订单详情：" + body);
         return JSON.parseObject(body, DanJuanModel.class);
     }
+
+    public DanJuanModel getOrderInfoByFund(String orderId, String cookies) {
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/fund/order/" + orderId);
+        get.addHeaders(getHead(cookies));
+        String body = get.execute().body();
+        System.out.println("请求订单详情：" + body);
+        return JSON.parseObject(body, DanJuanModel.class);
+    }
+
 
     private IndexUpsAndDowns getIndexUpsAndDowns(String category, String cookies) {
         HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/v3/index/quotes?category=" + category);

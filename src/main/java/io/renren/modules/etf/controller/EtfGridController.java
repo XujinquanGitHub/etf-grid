@@ -1,17 +1,12 @@
 package io.renren.modules.etf.controller;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
-import com.google.gson.JsonObject;
 import io.renren.modules.etf.StockModel;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
@@ -23,6 +18,7 @@ import io.renren.modules.etf.danjuan.fund.detail.AchievementList;
 import io.renren.modules.etf.danjuan.fund.detail.FundDetails;
 import io.renren.modules.etf.danjuan.fund.detail.ManagerList;
 import io.renren.modules.etf.danjuan.fund.detail.StockList;
+import io.renren.modules.etf.danjuan.trade.SingleFundTradeList;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
 import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
@@ -31,7 +27,6 @@ import io.renren.modules.etf.service.EtfInvestmentPlanService;
 import io.renren.modules.etf.service.impl.DanJuanService;
 import io.renren.modules.etf.service.impl.SwService;
 import org.apache.commons.lang.StringUtils;
-import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -337,10 +332,33 @@ public class EtfGridController {
             if (!CollectionUtils.isEmpty(gridEntityList)) {
                 continue;
             }
-            DanJuanModel orderInfo = danJuanService.getOrderInfo(items.get(i).getOrderId(), cookieParams);
+            DanJuanModel orderInfo = danJuanService.getOrderInfoByPlan(items.get(i).getOrderId(), cookieParams);
             importDanJuanData(orderInfo);
         }
         return "成功";
-
     }
+
+    @RequestMapping("/importDanJuanSingleFund")
+    public String importDanJuanSingleFund(@RequestParam String fundCode, @RequestHeader String cookieParams) {
+        if (StringUtils.isBlank(cookieParams)) {
+            return "cookie为空";
+        }
+        SingleFundTradeList singleFundTradeList = danJuanService.getSingleFundTradeList(fundCode, cookieParams);
+        List<io.renren.modules.etf.danjuan.trade.Item> collect = singleFundTradeList.getData().getItems().stream().filter(u -> !"failed".equals(u.getStatus()) && !"pay_failed".equals(u.getStatus())).collect(Collectors.toList());
+        for (int i = 0; i < collect.size(); i++) {
+            // 已导入订单
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("out_id", collect.get(i).getOrderId());
+            List<EtfGridEntity> gridEntityList = etfGridService.queryList(params);
+            if (!CollectionUtils.isEmpty(gridEntityList)) {
+                continue;
+            }
+            DanJuanModel orderInfo = danJuanService.getOrderInfoByFund(collect.get(i).getOrderId(), cookieParams);
+
+            importDanJuanData(orderInfo);
+        }
+        return "成功";
+    }
+
+
 }

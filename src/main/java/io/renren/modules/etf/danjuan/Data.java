@@ -41,6 +41,6 @@ public class Data {
     private String ttype;
     private long uid;
     private String undo_tip;
-    private long volume;
+    private BigDecimal volume;
 
 }
