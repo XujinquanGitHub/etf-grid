@@ -283,9 +283,10 @@ public class EtfGridController {
         List<StockList> stockList = fundDetails.getData().getFundPosition().getStockList();
         Map<String, BigDecimal> industryProportion = new TreeMap<String, BigDecimal>();
         for (StockList st : stockList) {
-            Optional<StockModel> first = allIndustryIndexes.stream().filter(u -> u.getStockCode().equals(st.getCode())).findFirst();
+            Optional<StockModel> first = allIndustryIndexes.stream().filter(u -> st.getCode().equals(u.getStockCode())).findFirst();
             if (!first.isPresent()) {
-                industryProportion.put(st.getName(), new BigDecimal(st.getPercent()));
+                industryProportion.put(st.getName(), new BigDecimal(st.getPercent()).setScale(2, BigDecimal.ROUND_HALF_UP));
+                continue;
             }
             StockModel stockModel = first.get();
             BigDecimal bigDecimal = industryProportion.get(stockModel.getIndustryName());
@@ -309,7 +310,7 @@ public class EtfGridController {
         fundDetails.getData().setIndustryProportion(industryProportion);
         List<ManagerList> managerList = fundDetails.getData().getManagerList();
         AchievementList achievementList = managerList.stream().flatMap(u -> u.getAchievementList().stream()).filter(u -> u.getFundCode().equals(fundNO)).findFirst().get();
-        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比", fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("行业占比", map);
+        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比", fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("前十大股票行业占比", map);
     }
 
     @Autowired
