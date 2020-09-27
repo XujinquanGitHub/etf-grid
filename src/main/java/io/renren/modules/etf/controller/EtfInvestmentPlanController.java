@@ -1,21 +1,28 @@
 package io.renren.modules.etf.controller;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import io.renren.modules.etf.FundModel;
+import io.renren.modules.etf.OperationModel;
+import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
+import io.renren.modules.etf.service.EtfGridService;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
+import io.renren.modules.etf.service.FundSituationDay;
 import io.renren.modules.etf.service.impl.SwService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,7 +41,8 @@ import io.renren.common.utils.R;
 public class EtfInvestmentPlanController {
     @Autowired
     private EtfInvestmentPlanService etfInvestmentPlanService;
-
+    @Autowired
+    private EtfGridService etfGridService;
     @Autowired
     private SwService swService;
 
@@ -94,6 +102,34 @@ public class EtfInvestmentPlanController {
     @RequestMapping("/getAllIndustryIndexes")
     public String getAllIndustryIndexes() throws Exception {
         return JSON.toJSONString(swService.getAllIndustryIndexes());
+    }
+
+    @RequestMapping("/getMoneyMakeToday")
+    public JSONObject getMoneyMakeToday() throws Exception {
+        List<EtfInvestmentPlanEntity> list = etfInvestmentPlanService.list();
+        List<EtfGridEntity> gridEntityList = etfGridService.list();
+        BigDecimal money = new BigDecimal(0);
+        List<String> uncountedFunds = new ArrayList<>();
+        List<String> fundInfoList = new ArrayList<>();
+        for (EtfInvestmentPlanEntity plan : list) {
+            List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(collect)) {
+                continue;
+            }
+            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
+            if (fundInfo.getGszzl() != null) {
+                // 计算当开盘时所值金额
+                double sum = collect.stream().mapToDouble(u -> u.getNum().multiply(fundInfo.getDwjz()).doubleValue()).sum();
+                BigDecimal singleAmount = new BigDecimal(sum).multiply(fundInfo.getGszzl().divide(new BigDecimal(100), 6, BigDecimal.ROUND_HALF_UP));
+                FundSituationDay fundSituationDay = new FundSituationDay();
+                fundSituationDay.setFundName(plan.getFundName()).setFundNo(plan.getFundNo()).setMakeMoney(singleAmount.setScale(2, BigDecimal.ROUND_HALF_UP)).setFundGains(fundInfo.getGszzl()).setFundAmount(new BigDecimal(sum).setScale(2, BigDecimal.ROUND_HALF_UP));
+                fundInfoList.add(fundSituationDay.toString());
+                money = money.add(singleAmount);
+            } else {
+                uncountedFunds.add("基金名：" + plan.getFundName() + "----基金代码：" + plan.getFundNo() + "----金额：");
+            }
+        }
+        return new JSONObject().fluentPut("1今天赚钱", money.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("3今天赚钱详情", fundInfoList).fluentPut("2未统计基金", uncountedFunds);
     }
 
 }

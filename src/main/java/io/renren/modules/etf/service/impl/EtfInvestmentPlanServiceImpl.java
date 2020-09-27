@@ -72,7 +72,7 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
                 Data data = fundInfo.getData();
                 FundDerived fundDerived = data.getFundDerived();
                 // 从蛋卷获取到的是前一个交易日的净值
-                result = new FundModel().setFundcode(fundNo).setName(data.getFdName()).setGsz(fundDerived.getUnit_nav());
+                result = new FundModel().setFundcode(fundNo).setName(data.getFdName()).setGsz(fundDerived.getUnit_nav()).setDwjz(fundDerived.getUnit_nav());
                 if (StringUtils.isNotBlank(indexNo)) {
                     IndexUpsAndDowns mainIndexChanges = danJuanService.getMainIndexChanges();
                     Optional<Datum> first = mainIndexChanges.getData().stream().filter(u -> indexNo.equals(u.getSymbol())).findFirst();
@@ -83,12 +83,14 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
                     if (first.isPresent()) {
                         Datum datum = first.get();
                         BigDecimal pr = new BigDecimal(datum.getPercentage()).divide(new BigDecimal(100), 6, BigDecimal.ROUND_HALF_UP);
-                        result.setPercentage(pr);
+                        result.setGszzl(pr);
                         BigDecimal amountPercent = new BigDecimal(1).add(pr);
                         log.debug("指数情况：" + JSONUtil.toJsonStr(datum));
                         log.debug("涨跌幅度：" + amountPercent);
                         BigDecimal newPrice = fundDerived.getUnit_nav().multiply(amountPercent);
                         result.setGsz(newPrice);
+                    }else {
+                        result.setGszzl(new BigDecimal(0)).setDwjz(fundDerived.getUnit_nav());
                     }
                 }
             } catch (Exception exs) {
