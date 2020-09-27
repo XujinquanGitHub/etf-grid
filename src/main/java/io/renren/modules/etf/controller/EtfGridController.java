@@ -281,8 +281,7 @@ public class EtfGridController {
         FundDetails fundDetails = danJuanService.getFundDetails(fundNO, "");
         List<StockModel> allIndustryIndexes = swService.getAllIndustryIndexes();
         List<StockList> stockList = fundDetails.getData().getFundPosition().getStockList();
-        Map<String, BigDecimal> industryProportion = fundDetails.getData().getIndustryProportion();
-
+        Map<String, BigDecimal> industryProportion = new TreeMap<String, BigDecimal>();
         for (StockList st : stockList) {
             Optional<StockModel> first = allIndustryIndexes.stream().filter(u -> u.getStockCode().equals(st.getCode())).findFirst();
             if (!first.isPresent()) {
@@ -293,11 +292,24 @@ public class EtfGridController {
             if (bigDecimal == null) {
                 bigDecimal = new BigDecimal(0);
             }
-            industryProportion.put(stockModel.getIndustryName(), bigDecimal.add(new BigDecimal(st.getPercent())));
+            industryProportion.put(stockModel.getIndustryName(), bigDecimal.add(new BigDecimal(st.getPercent())).setScale(2, BigDecimal.ROUND_HALF_UP));
         }
+        // 降序
+        List<Map.Entry<String, BigDecimal>> list = new ArrayList<Map.Entry<String, BigDecimal>>(industryProportion.entrySet());
+        Collections.sort(list, new Comparator<Map.Entry<String, BigDecimal>>() {
+            @Override
+            public int compare(Map.Entry<String, BigDecimal> o1, Map.Entry<String, BigDecimal> o2) {
+                return o2.getValue().compareTo(o1.getValue());
+            }
+        });
+        LinkedHashMap<String, BigDecimal> map = new LinkedHashMap<>();
+        for (Map.Entry<String, BigDecimal> item : list) {
+            map.put(item.getKey(), item.getValue());
+        }
+        fundDetails.getData().setIndustryProportion(industryProportion);
         List<ManagerList> managerList = fundDetails.getData().getManagerList();
         AchievementList achievementList = managerList.stream().flatMap(u -> u.getAchievementList().stream()).filter(u -> u.getFundCode().equals(fundNO)).findFirst().get();
-        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比",fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("行业占比",industryProportion);
+        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比", fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("行业占比", map);
     }
 
     @Autowired
