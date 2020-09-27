@@ -89,11 +89,12 @@ public class EtfGridController {
         EtfInvestmentPlanEntity planEntity = etfInvestmentPlanService.getById(etfGrid.getPlanId());
         DanJuanWorthInfo fundWorth = danJuanService.getFundWorth(planEntity.getFundNo(), "", 10);
         List<io.renren.modules.etf.danjuan.worth.Item> items = fundWorth.getData().getItems();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        List<io.renren.modules.etf.danjuan.worth.Item> collect = items.stream().filter(u -> DateUtil.formatDate(u.getDate()).equals(LocalDateTime.now().minus(1, ChronoUnit.DAYS).format(formatter))).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(collect)) {
-            etfGrid.setBuyPrice(collect.get(0).getValue());
-            etfGrid.setBuyTime(collect.get(0).getDate());
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//        List<io.renren.modules.etf.danjuan.worth.Item> collect = items.stream().filter(u -> DateUtil.formatDate(u.getDate()).equals(LocalDateTime.now().minus(1, ChronoUnit.DAYS).format(formatter))).collect(Collectors.toList());
+//
+        if (!CollectionUtils.isEmpty(items)) {
+            etfGrid.setBuyPrice(items.get(0).getValue());
+            etfGrid.setBuyTime(items.get(0).getDate());
             etfGrid.setNum(etfGrid.getBuyAmount().divide(etfGrid.getBuyPrice(), 2, BigDecimal.ROUND_HALF_UP));
             etfGridService.save(etfGrid);
             return JSON.toJSONString(etfGrid);
