@@ -31,6 +31,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.renren.common.utils.PageUtils;
 import io.renren.common.utils.Query;
+import org.springframework.util.CollectionUtils;
 
 
 @Service("etfInvestmentPlanService")
@@ -42,8 +43,21 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<EtfInvestmentPlanEntity> page = this.page(new Query<EtfInvestmentPlanEntity>().getPage(params), new QueryWrapper<EtfInvestmentPlanEntity>());
-
         return new PageUtils(page);
+    }
+
+    public List<EtfInvestmentPlanEntity> queryListByFundName(String fundName) {
+        Map<String, Object> params=new HashMap<>();
+        params.put("fund_name",fundName);
+        return listByMap(params);
+    }
+
+    public EtfInvestmentPlanEntity queryByFundName(String fundName) {
+        List<EtfInvestmentPlanEntity> etfInvestmentPlanEntities = queryListByFundName(fundName);
+        if (CollectionUtils.isEmpty(etfInvestmentPlanEntities)){
+            return null;
+        }
+        return etfInvestmentPlanEntities.get(0);
     }
 
     public FundModel getFundInfoByTianTian(String fundNo) {

@@ -28,7 +28,7 @@ public class FundSituationDay {
 
     @Override
     public String toString() {
-        return " 赚钱=" + addForNum(15, makeMoney.toString()) + ", 基金号=" + addForNum(8, fundNo) + ", 涨幅=" + addForNum(15, fundGains.toString()) + ", 基金开盘价值=" + addForNum(20, fundAmount.toString())+ ",基金名=" + addForNum(35, fundName) ;
+        return " 赚钱:" + addForNum(15, makeMoney.toString()) + ", 基金号:" + addForNum(8, fundNo) + ", 涨幅:" + addForNum(15, fundGains.toString()) + ", 基金开盘价值:" + addForNum(20, fundAmount.toString())+ ",基金名:" + addForNum(35, fundName) ;
     }
 
     public String addForNum(int strLength, String str) {
@@ -40,7 +40,6 @@ public class FundSituationDay {
             str = sb.toString();
             strLen = str.length();
         }
-        System.out.println("长度：" + str.length());
         return str;
     }
 }

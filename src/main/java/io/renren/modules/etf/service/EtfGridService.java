@@ -18,5 +18,7 @@ public interface EtfGridService extends IService<EtfGridEntity> {
     PageUtils queryPage(Map<String, Object> params);
 
     List<EtfGridEntity> queryList(Map<String, Object> params);
+
+    List<EtfGridEntity> queryListByFundName(String fundName);
 }
 

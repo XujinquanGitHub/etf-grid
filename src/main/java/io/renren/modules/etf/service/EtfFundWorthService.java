@@ -20,6 +20,8 @@ public interface EtfFundWorthService extends IService<EtfFundWorthEntity> {
 
     boolean isExit(String fundNo);
 
+    List<EtfFundWorthEntity> importWorth(String fundNo);
+
     List<EtfFundWorthEntity> getListByFundNo(String fundNo);
 }
 

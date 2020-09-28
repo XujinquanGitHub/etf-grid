@@ -56,14 +56,7 @@ public class EtfFundWorthController {
      */
     @RequestMapping("/save")
     public R save(@RequestParam String fundNo) {
-        if (!etfFundWorthService.isExit(fundNo)) {
-            DanJuanWorthInfo fundWorth = danJuanService.getFundWorth(fundNo, null);
-            List<Item> items = fundWorth.getData().getItems();
-            if (!CollectionUtils.isEmpty(items)) {
-                List<EtfFundWorthEntity> collect = items.stream().map(u -> new EtfFundWorthEntity().setFundDate(u.getDate()).setFundNo(fundNo).setPercentage(u.getPercentage()).setWorth(u.getValue())).collect(Collectors.toList());
-                etfFundWorthService.saveBatch(collect);
-            }
-        }
+        etfFundWorthService.importWorth(fundNo);
         return R.ok();
     }
 

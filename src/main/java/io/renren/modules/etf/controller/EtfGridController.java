@@ -1,5 +1,6 @@
 package io.renren.modules.etf.controller;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfGridService;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
+import io.renren.modules.etf.service.impl.AliPayService;
 import io.renren.modules.etf.service.impl.DanJuanService;
 import io.renren.modules.etf.service.impl.SwService;
 import org.apache.commons.lang.StringUtils;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
 
 import io.renren.common.utils.PageUtils;
 import io.renren.common.utils.R;
+import org.springframework.web.multipart.MultipartFile;
 
 
 /**
@@ -130,7 +133,11 @@ public class EtfGridController {
             FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
             if ((type == null || type == 0) && (plan.getPlanOperationType() == 1 || plan.getPlanOperationType() == 3)) {
                 for (int i = 0; i < collect.size(); i++) {
+
                     EtfGridEntity etfGridEntity = collect.get(i);
+                    if (etfGridEntity.getBuyAmount().doubleValue() <= 0) {
+                        continue;
+                    }
                     // 当前价格减去买入价格
                     BigDecimal subtract = fundInfo.getGsz().subtract(etfGridEntity.getBuyPrice());
                     BigDecimal divide = subtract.divide(etfGridEntity.getBuyPrice(), 6, BigDecimal.ROUND_HALF_UP);
@@ -311,7 +318,8 @@ public class EtfGridController {
 
     @Autowired
     private SwService swService;
-
+    @Autowired
+    private AliPayService aliPayService;
     @Autowired
     private DanJuanService danJuanService;
 
@@ -360,5 +368,8 @@ public class EtfGridController {
         return "成功";
     }
 
-
+    @PostMapping("/importAliFund")
+    public String importAliFund(@RequestParam MultipartFile file) throws Exception {
+        return aliPayService.importAliFund(file.getInputStream());
+    }
 }

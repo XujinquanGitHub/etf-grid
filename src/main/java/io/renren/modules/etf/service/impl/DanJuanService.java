@@ -107,7 +107,8 @@ public class DanJuanService {
         return getFundWorth(fundNo, cookies, 10000);
     }
 
-    public DanJuanWorthInfo getFundWorth(String fundNo, String cookies, Integer size) {
+
+    public DanJuanWorthInfo getFundWorth(String fundNo, String cookies, long size) {
         HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/fund/nav/history/" + fundNo + "?size=" + size);
         get.addHeaders(getHead(cookies));
         String body = get.execute().body();
