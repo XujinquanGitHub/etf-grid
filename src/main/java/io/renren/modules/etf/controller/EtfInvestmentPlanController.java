@@ -109,27 +109,29 @@ public class EtfInvestmentPlanController {
         List<EtfInvestmentPlanEntity> list = etfInvestmentPlanService.list();
         List<EtfGridEntity> gridEntityList = etfGridService.list();
         BigDecimal money = new BigDecimal(0);
+        BigDecimal total = new BigDecimal(0);
         List<String> uncountedFunds = new ArrayList<>();
-        List<String> fundInfoList = new ArrayList<>();
+        TreeMap<BigDecimal, String> fundInfoList = new TreeMap<>();
         for (EtfInvestmentPlanEntity plan : list) {
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(collect)) {
                 continue;
             }
             FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
+            // 计算当开盘时所值金额
+            double sum = collect.stream().mapToDouble(u -> u.getNum().multiply(fundInfo.getDwjz()).doubleValue()).sum();
+            total = total.add(new BigDecimal(sum));
             if (fundInfo.getGszzl() != null) {
-                // 计算当开盘时所值金额
-                double sum = collect.stream().mapToDouble(u -> u.getNum().multiply(fundInfo.getDwjz()).doubleValue()).sum();
                 BigDecimal singleAmount = new BigDecimal(sum).multiply(fundInfo.getGszzl().divide(new BigDecimal(100), 6, BigDecimal.ROUND_HALF_UP));
                 FundSituationDay fundSituationDay = new FundSituationDay();
                 fundSituationDay.setFundName(plan.getFundName()).setFundNo(plan.getFundNo()).setMakeMoney(singleAmount.setScale(2, BigDecimal.ROUND_HALF_UP)).setFundGains(fundInfo.getGszzl()).setFundAmount(new BigDecimal(sum).setScale(2, BigDecimal.ROUND_HALF_UP));
-                fundInfoList.add(fundSituationDay.toString());
+                fundInfoList.put(fundSituationDay.getMakeMoney(), fundSituationDay.toString());
                 money = money.add(singleAmount);
             } else {
-                uncountedFunds.add("基金名：" + plan.getFundName() + "----基金代码：" + plan.getFundNo() + "----金额：");
+                uncountedFunds.add("基金名：" + plan.getFundName() + "----基金代码：" + plan.getFundNo() + "----金额：" + sum);
             }
         }
-        return new JSONObject().fluentPut("1今天赚钱", money.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("3今天赚钱详情", fundInfoList).fluentPut("2未统计基金", uncountedFunds);
+        return new JSONObject().fluentPut("1今天赚钱", money.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("1总投资额", total.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("3今天赚钱详情", fundInfoList.descendingMap().values()).fluentPut("2未统计基金", uncountedFunds);
     }
 
 }
