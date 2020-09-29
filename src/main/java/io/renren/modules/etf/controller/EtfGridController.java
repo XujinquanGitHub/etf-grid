@@ -114,6 +114,7 @@ public class EtfGridController {
     public com.alibaba.fastjson.JSONObject selectPrice(@RequestParam(required = false) String fundNoListString, @RequestParam(required = false) Integer type) {
         // type 为1查询买入操作  为0时查询卖出。为空查询所有
         List<OperationModel> updateList = new ArrayList<>();
+        List<OperationModel> watchList = new ArrayList<>();
         List<EtfInvestmentPlanEntity> list = etfInvestmentPlanService.list();
         List<EtfGridEntity> gridEntityList = etfGridService.list();
         if (StringUtils.isNotBlank(fundNoListString)) {
@@ -127,10 +128,31 @@ public class EtfGridController {
                 continue;
             }
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
+            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
             if (CollectionUtils.isEmpty(collect)) {
+                if (plan.getInitPrice().doubleValue() < fundInfo.getGsz().doubleValue()) {
+                    continue;
+                }
+                BigDecimal subtract = plan.getInitPrice().subtract(fundInfo.getGsz());
+                BigDecimal divide = subtract.divide(plan.getInitPrice(), 10, BigDecimal.ROUND_HALF_UP);
+                divide = divide.multiply(new BigDecimal(100));
+                String remark = fundInfo.getName() + "已经从观察点回落了:" + divide + "%观察日期" + DateUtil.formatDateTime(plan.getWatchDate());
+                System.out.println(remark);
+                if (divide.compareTo(plan.getRiseRange()) > 0) {
+                    OperationModel entity = new OperationModel();
+                    entity.setName(fundInfo.getName());
+                    entity.setFundNo(fundInfo.getFundcode());
+                    // 计算买入金额，用最低点的亏损率除以计划的亏损率乘以单批金额
+                    BigDecimal amount = divide.divide(plan.getFallRange(), 6, BigDecimal.ROUND_HALF_UP).multiply(plan.getSingleAmount());
+                    entity.setBuyAmount(amount);
+                    entity.setOperationString("买入金额:" + entity.getBuyAmount());
+                    entity.setPlanId(plan.getId());
+                    entity.setRemark(remark);
+                    entity.setBuyTime(new Date());
+                    watchList.add(entity);
+                }
                 continue;
             }
-            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
             if ((type == null || type == 0) && (plan.getPlanOperationType() == 1 || plan.getPlanOperationType() == 3)) {
                 for (int i = 0; i < collect.size(); i++) {
 
@@ -210,7 +232,7 @@ public class EtfGridController {
 
         }
 
-        return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("updateList", updateList);
+        return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("买入卖出", updateList).fluentPut("观察可以买入", watchList);
     }
 
 

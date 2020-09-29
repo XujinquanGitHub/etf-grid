@@ -16,4 +16,6 @@ public class OperationModel extends EtfGridEntity {
 
     private String operationString;
 
+    private String remark;
+
 }
