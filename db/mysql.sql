@@ -161,11 +161,12 @@ CREATE TABLE `etf_investment_plan` (
   `buy_type` tinyint DEFAULT '2' COMMENT '买入计算点 1、按最后一次买入做为参考点  2、按买入记录的最低点做为参考',
   `plan_operation_type` tinyint DEFAULT '1' COMMENT '操作方式 1、正常买卖 2、只买不卖 3、只卖不买 4、终止计划',
   `index_no` varchar(20) DEFAULT NULL COMMENT '基金对应的指数号',
+  `watch_date` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '观察时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
-CREATE TABLE `etf_grid` (
+REATE TABLE `etf_grid` (
   `id` int NOT NULL AUTO_INCREMENT,
   `plan_id` int NOT NULL,
   `fund_no` varchar(20) DEFAULT NULL COMMENT '基金代码',
@@ -182,7 +183,7 @@ CREATE TABLE `etf_grid` (
   `status` tinyint NOT NULL DEFAULT '1' COMMENT '0、计划买入 1、买入  2、待卖出 3、已卖出',
   `out_id` varchar(50) DEFAULT NULL COMMENT '外部导入ID，避免重复导入',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=199 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=271 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 CREATE TABLE `etf_fund_worth` (
