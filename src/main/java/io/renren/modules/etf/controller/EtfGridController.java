@@ -306,7 +306,11 @@ public class EtfGridController {
         List<StockModel> allIndustryIndexes = swService.getAllIndustryIndexes();
         List<StockList> stockList = fundDetails.getData().getFundPosition().getStockList();
         Map<String, BigDecimal> industryProportion = new TreeMap<String, BigDecimal>();
+        BigDecimal topTenTotal = new BigDecimal(0);
+        Map<String, Double> collect = new LinkedHashMap<>();
         for (StockList st : stockList) {
+            collect.put(st.getName(), st.getPercent());
+            topTenTotal = topTenTotal.add(new BigDecimal(st.getPercent()));
             Optional<StockModel> first = allIndustryIndexes.stream().filter(u -> st.getCode().equals(u.getStockCode())).findFirst();
             if (!first.isPresent()) {
                 industryProportion.put(st.getName(), new BigDecimal(st.getPercent()).setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -334,8 +338,8 @@ public class EtfGridController {
         fundDetails.getData().setIndustryProportion(industryProportion);
         List<ManagerList> managerList = fundDetails.getData().getManagerList();
         AchievementList achievementList = managerList.stream().flatMap(u -> u.getAchievementList().stream()).filter(u -> u.getFundCode().equals(fundNO)).findFirst().get();
-        Map<String, Double> collect = stockList.stream().collect(Collectors.toMap(u -> u.getName(), u -> u.getPercent()));
-        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比", fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("前十大股票行业占比", map).fluentPut("前十大股票占比", collect);
+
+        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比", fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("前十大股票行业占比", map).fluentPut("前十大股票占比", collect).fluentPut("前十大股票总比", topTenTotal.setScale(2, BigDecimal.ROUND_HALF_UP));
     }
 
     @Autowired
