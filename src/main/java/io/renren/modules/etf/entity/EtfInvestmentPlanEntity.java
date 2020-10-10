@@ -89,4 +89,7 @@ public class EtfInvestmentPlanEntity extends Model<EtfInvestmentPlanEntity> impl
 
 	private Date watchDate;
 
+	private String accountDesc;
+
+
 }

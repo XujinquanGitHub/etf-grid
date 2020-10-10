@@ -175,13 +175,14 @@ public class EtfGridController {
                         entity.setSellAmount(sellAmount);
                         entity.setProfitRate(divide);
                         entity.setProfit(sellAmount.subtract(etfGridEntity.getBuyAmount()));
+                        entity.setAccountDesc(plan.getAccountDesc());
                         entity.setOperationString("   卖出份额：" + entity.getNum() + "   买入金额：" + entity.getBuyAmount() + "    卖出金额:" + entity.getSellAmount() + "   盈利：" + entity.getProfit() + "  盈利率：" + entity.getProfitRate() + "%");
                         totalSellAmount = totalSellAmount.add(entity.getSellAmount());
                         updateList.add(entity);
                         // 将这一网格设置为计划卖出
                         EtfGridEntity updateModel = new EtfGridEntity();
                         updateModel.setId(entity.getId());
-                        updateModel.setStatus(2);
+//                        updateModel.setStatus(2);
                     }
                 }
             }
@@ -212,6 +213,7 @@ public class EtfGridController {
 //                            entity.setStatus(0);
                         entity.setPlanId(plan.getId());
                         entity.setBuyTime(new Date());
+                        entity.setAccountDesc(plan.getAccountDesc());
                         updateList.add(entity);
 
                         totalBuyAmount = totalBuyAmount.add(amount);

@@ -149,6 +149,7 @@ CREATE TABLE `etf_investment_plan` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '投资计划名',
   `fund_name` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '基金名称',
+  `account_desc` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '所属帐号',
   `fund_no` varchar(50) DEFAULT NULL COMMENT '基金号',
   `init_price` decimal(20,8) DEFAULT NULL COMMENT '投资基金的初始净值',
   `current_price` decimal(20,8) DEFAULT NULL COMMENT '基金当前净值',
@@ -163,7 +164,7 @@ CREATE TABLE `etf_investment_plan` (
   `index_no` varchar(20) DEFAULT NULL COMMENT '基金对应的指数号',
   `watch_date` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '观察时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 REATE TABLE `etf_grid` (
