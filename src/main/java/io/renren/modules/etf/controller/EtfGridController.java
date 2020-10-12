@@ -2,6 +2,7 @@ package io.renren.modules.etf.controller;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ import io.renren.modules.etf.danjuan.fund.detail.ManagerList;
 import io.renren.modules.etf.danjuan.fund.detail.StockList;
 import io.renren.modules.etf.danjuan.trade.SingleFundTradeList;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
+import io.renren.modules.etf.entity.EtfFundWorthEntity;
 import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.entity.EtfOperationEntity;
@@ -273,6 +275,29 @@ public class EtfGridController {
             etfOperationService.save(operationEntity);
         }
         return "成功";
+    }
+
+    @RequestMapping("/exeOperation")
+    public String exeOperation() {
+        List<EtfOperationEntity> operationList = etfOperationService.list();
+        Date date = new Date();
+        date.setHours(0);
+        List<EtfOperationEntity> collect = operationList.stream().filter(u -> u.getCreateTime().before(date)).collect(Collectors.toList());
+        for (EtfOperationEntity item : collect) {
+            if (item.getOperationType() == 0) {
+                EtfGridEntity gridEntity = new EtfGridEntity();
+                gridEntity.setId(item.getGridId());
+                gridEntity.setSellTime(item.getCreateTime());
+                gridEntity.setStatus(0);
+                etfGridService.updateById(gridEntity);
+                etfOperationService.removeById(item);
+            } else {
+
+            }
+        }
+
+
+        return JSON.toJSONString(collect);
     }
 
     @RequestMapping("/importDanJuanData")
