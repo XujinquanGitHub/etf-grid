@@ -166,6 +166,14 @@ CREATE TABLE `etf_investment_plan` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
+CREATE TABLE `etf_operation` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `grid_id` int DEFAULT NULL,
+  `operation_type` tinyint NOT NULL DEFAULT '0' COMMENT '0 卖出  1、买入',
+  `create_time` datetime DEFAULT NULL COMMENT '操作时间',
+  `amount` decimal(20,6) DEFAULT NULL COMMENT '操作金额',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 REATE TABLE `etf_grid` (
   `id` int NOT NULL AUTO_INCREMENT,

@@ -22,8 +22,6 @@ import java.util.stream.Collectors;
 
 
 /**
- * @author chenshun
- * @email sunlightcs@gmail.com
  * @date 2020-09-23 15:10:56
  */
 @RestController

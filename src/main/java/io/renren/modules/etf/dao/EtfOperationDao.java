@@ -1,15 +1,15 @@
 package io.renren.modules.etf.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import io.renren.modules.etf.entity.EtfFundWorthEntity;
+import io.renren.modules.etf.entity.EtfOperationEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 
  *
- * @date 2020-09-23 15:10:56
+ * @date 2020-10-12 10:36:07
  */
 @Mapper
-public interface EtfFundWorthDao extends BaseMapper<EtfFundWorthEntity> {
+public interface EtfOperationDao extends BaseMapper<EtfOperationEntity> {
 	
 }

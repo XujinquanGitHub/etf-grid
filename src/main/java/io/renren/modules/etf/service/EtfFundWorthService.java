@@ -10,8 +10,6 @@ import java.util.Map;
 /**
  * 
  *
- * @author chenshun
- * @email sunlightcs@gmail.com
  * @date 2020-09-23 15:10:56
  */
 public interface EtfFundWorthService extends IService<EtfFundWorthEntity> {

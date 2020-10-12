@@ -2,6 +2,7 @@ package io.renren.modules.etf.controller;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,8 +24,10 @@ import io.renren.modules.etf.danjuan.trade.SingleFundTradeList;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
 import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
+import io.renren.modules.etf.entity.EtfOperationEntity;
 import io.renren.modules.etf.service.EtfGridService;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
+import io.renren.modules.etf.service.EtfOperationService;
 import io.renren.modules.etf.service.impl.AliPayService;
 import io.renren.modules.etf.service.impl.DanJuanService;
 import io.renren.modules.etf.service.impl.SwService;
@@ -50,6 +53,9 @@ public class EtfGridController {
 
     @Autowired
     private EtfInvestmentPlanService etfInvestmentPlanService;
+
+    @Autowired
+    private EtfOperationService etfOperationService;
 
     /**
      * 列表
@@ -246,6 +252,27 @@ public class EtfGridController {
         etfGridService.removeByIds(Arrays.asList(ids));
 
         return R.ok();
+    }
+
+    /**
+     * 添加一个操作，自动更新
+     */
+    @RequestMapping("/addOperation")
+    public String addOperation(@RequestBody OperationModel operationModel) {
+        if (operationModel.getStatus() == null) {
+            EtfOperationEntity operationEntity = new EtfOperationEntity();
+            operationEntity.setAmount(operationModel.getBuyAmount());
+            operationEntity.setOperationType(1);
+            operationEntity.setCreateTime(new Date());
+            etfOperationService.save(operationEntity);
+        } else if (operationModel.getStatus() == 1) {
+            EtfOperationEntity operationEntity = new EtfOperationEntity();
+            operationEntity.setGridId(operationModel.getId());
+            operationEntity.setOperationType(0);
+            operationEntity.setCreateTime(new Date());
+            etfOperationService.save(operationEntity);
+        }
+        return "成功";
     }
 
     @RequestMapping("/importDanJuanData")

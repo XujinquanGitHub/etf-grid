@@ -7,34 +7,37 @@ import java.math.BigDecimal;
 import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
-import lombok.experimental.Accessors;
 
 /**
  * 
  *
- * @date 2020-09-23 15:10:56
+ * @date 2020-10-12 10:36:07
  */
 @Data
-@TableName("etf_fund_worth")
-@Accessors(chain = true)
-public class EtfFundWorthEntity implements Serializable {
+@TableName("etf_operation")
+public class EtfOperationEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
 	 * 
 	 */
-	private String fundNo;
+	@TableId
+	private Integer id;
 	/**
 	 * 
 	 */
-	private Date fundDate;
+	private Integer gridId;
 	/**
-	 * 
+	 * 0 卖出  1、买入
 	 */
-	private BigDecimal worth;
+	private Integer operationType;
 	/**
-	 * 
+	 * 操作时间
 	 */
-	private BigDecimal percentage;
+	private Date createTime;
+	/**
+	 * 操作金额
+	 */
+	private BigDecimal amount;
 
 }
