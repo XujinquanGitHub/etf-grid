@@ -105,8 +105,12 @@ public class EtfInvestmentPlanController {
     }
 
     @RequestMapping("/getMoneyMakeToday")
-    public JSONObject getMoneyMakeToday() throws Exception {
+    public JSONObject getMoneyMakeToday(@RequestParam String accountList) throws Exception {
         List<EtfInvestmentPlanEntity> list = etfInvestmentPlanService.list();
+        if (StringUtils.isNotBlank(accountList)) {
+            List<String> strings = Arrays.asList(accountList.split(","));
+            list = list.stream().filter(u -> strings.contains(u.getAccountDesc())).collect(Collectors.toList());
+        }
         List<EtfGridEntity> gridEntityList = etfGridService.list();
         BigDecimal money = new BigDecimal(0);
         BigDecimal total = new BigDecimal(0);
