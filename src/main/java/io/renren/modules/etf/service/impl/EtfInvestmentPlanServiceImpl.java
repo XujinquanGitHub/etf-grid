@@ -21,10 +21,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.rmi.server.ExportException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -47,14 +45,14 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
     }
 
     public List<EtfInvestmentPlanEntity> queryListByFundName(String fundName) {
-        Map<String, Object> params=new HashMap<>();
-        params.put("fund_name",fundName);
+        Map<String, Object> params = new HashMap<>();
+        params.put("fund_name", fundName);
         return listByMap(params);
     }
 
     public EtfInvestmentPlanEntity queryByFundName(String fundName) {
         List<EtfInvestmentPlanEntity> etfInvestmentPlanEntities = queryListByFundName(fundName);
-        if (CollectionUtils.isEmpty(etfInvestmentPlanEntities)){
+        if (CollectionUtils.isEmpty(etfInvestmentPlanEntities)) {
             return null;
         }
         return etfInvestmentPlanEntities.get(0);
@@ -79,6 +77,10 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
         FundModel result = null;
         try {
             result = getFundInfoByTianTian(fundNo);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            if (!result.getGztime().contains(sdf.format(new Date()))) {
+                throw new RuntimeException("非今天数据");
+            }
         } catch (Exception ex) {
             System.out.println("异常：" + ex.toString());
             try {
@@ -103,7 +105,7 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
                         log.debug("涨跌幅度：" + amountPercent);
                         BigDecimal newPrice = fundDerived.getUnit_nav().multiply(amountPercent);
                         result.setGsz(newPrice);
-                    }else {
+                    } else {
                         result.setGszzl(new BigDecimal(0)).setDwjz(fundDerived.getUnit_nav());
                     }
                 }
