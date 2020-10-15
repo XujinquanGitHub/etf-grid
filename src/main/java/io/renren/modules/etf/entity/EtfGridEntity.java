@@ -79,6 +79,7 @@ public class EtfGridEntity extends Model<EtfGridEntity> implements Serializable 
 
 	private Date sellTime;
 
+	//0、计划买入 1、买入 2、待卖出 3、已卖出
 	private Integer status;
 
 	private String outId;

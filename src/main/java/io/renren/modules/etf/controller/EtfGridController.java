@@ -118,6 +118,25 @@ public class EtfGridController {
         return R.ok();
     }
 
+    /**
+     * 卖出一份
+     */
+    @RequestMapping("/sellList")
+    public com.alibaba.fastjson.JSONObject sellList(@RequestBody List<OperationModel> etfList) {
+        if (CollectionUtils.isEmpty(etfList)) {
+            return new com.alibaba.fastjson.JSONObject().fluentPut("list", "没有可以卖的");
+        }
+        etfList.forEach(item -> {
+            EtfGridEntity gridEntity = new EtfGridEntity();
+            gridEntity.setId(item.getId());
+            gridEntity.setSellTime(new Date());
+            gridEntity.setStatus(3);
+            etfGridService.updateById(gridEntity);
+        });
+
+        return new com.alibaba.fastjson.JSONObject().fluentPut("list", etfList);
+    }
+
     @RequestMapping("/selectPrice")
     public com.alibaba.fastjson.JSONObject selectPrice(@RequestParam(required = false) String fundNoListString, @RequestParam(required = false) Integer type) {
         // type 为1查询买入操作  为0时查询卖出。为空查询所有
