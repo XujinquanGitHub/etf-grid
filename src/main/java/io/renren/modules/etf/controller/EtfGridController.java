@@ -126,15 +126,25 @@ public class EtfGridController {
         if (CollectionUtils.isEmpty(etfList)) {
             return new com.alibaba.fastjson.JSONObject().fluentPut("list", "没有可以卖的");
         }
-        etfList.forEach(item -> {
+        BigDecimal total = new BigDecimal(0);
+        Map<String, BigDecimal> totalDetail = new HashMap<>();
+        for (OperationModel item : etfList) {
             EtfGridEntity gridEntity = new EtfGridEntity();
             gridEntity.setId(item.getId());
             gridEntity.setSellTime(new Date());
             gridEntity.setStatus(3);
             etfGridService.updateById(gridEntity);
-        });
+            total = total.add(item.getSellAmount());
+            BigDecimal bigDecimal = totalDetail.get(item.getName());
+            if (bigDecimal == null) {
+                totalDetail.put(item.getName(), new BigDecimal(item.getSellAmount().doubleValue()));
+            } else {
+                bigDecimal = bigDecimal.add(item.getSellAmount());
+                totalDetail.put(item.getName(), bigDecimal);
+            }
+        }
 
-        return new com.alibaba.fastjson.JSONObject().fluentPut("list", etfList);
+        return new com.alibaba.fastjson.JSONObject().fluentPut("list", etfList).fluentPut("卖出总金额", total).fluentPut("卖出详情", totalDetail);
     }
 
     @RequestMapping("/selectPrice")
