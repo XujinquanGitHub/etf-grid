@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
+import io.renren.common.utils.DateUtils;
 import io.renren.modules.etf.StockModel;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
@@ -148,12 +149,16 @@ public class EtfGridController {
     }
 
     @RequestMapping("/selectPrice")
-    public com.alibaba.fastjson.JSONObject selectPrice(@RequestParam(required = false) String fundNoListString, @RequestParam(required = false) Integer type) {
+    public com.alibaba.fastjson.JSONObject selectPrice(@RequestParam(required = false) String fundNoListString, @RequestParam(required = false) Integer type, @RequestParam(required = false) String startDate) {
         // type 为1查询买入操作  为0时查询卖出。为空查询所有
         List<OperationModel> updateList = new ArrayList<>();
         List<OperationModel> watchList = new ArrayList<>();
         List<EtfInvestmentPlanEntity> list = etfInvestmentPlanService.list();
         List<EtfGridEntity> gridEntityList = etfGridService.list();
+        if (startDate != null) {
+            DateTime parse = DateUtil.parse(startDate);
+            gridEntityList = gridEntityList.stream().filter(u -> u.getBuyTime() == null || !parse.after(u.getBuyTime())).collect(Collectors.toList());
+        }
         if (StringUtils.isNotBlank(fundNoListString)) {
             List<String> fundNoList = Arrays.asList(fundNoListString.split(","));
             list = list.stream().filter(u -> fundNoList.contains(u.getFundNo())).collect(Collectors.toList());
@@ -270,8 +275,10 @@ public class EtfGridController {
 
 
         }
+        Map<String, List<OperationModel>> listMap = updateList.stream().collect(Collectors.groupingBy(u -> u.getName()));
+        Map<String, Double> collect = listMap.entrySet().stream().collect(Collectors.toMap(u -> u.getKey(), u -> u.getValue().stream().mapToDouble(m -> m.getNum().doubleValue()).sum()));
 
-        return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("买入卖出", updateList).fluentPut("观察可以买入", watchList);
+        return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("买入卖出", updateList).fluentPut("观察可以买入", watchList).fluentPut("卖出价格合计", collect);
     }
 
 
