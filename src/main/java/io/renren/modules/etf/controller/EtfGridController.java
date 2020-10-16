@@ -12,6 +12,7 @@ import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import io.renren.common.utils.DateUtils;
 import io.renren.modules.etf.StockModel;
+import io.renren.modules.etf.TranslateModel;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
 import io.renren.modules.etf.danjuan.Data;
@@ -281,6 +282,18 @@ public class EtfGridController {
         return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("买入卖出", updateList).fluentPut("观察可以买入", watchList).fluentPut("卖出价格合计", collect);
     }
 
+
+
+    @RequestMapping("/translate")
+    public com.alibaba.fastjson.JSONObject translate(@RequestBody TranslateModel etfGrid) {
+        FundModel sourceFund = etfInvestmentPlanService.getFundInfo(etfGrid.getSourceFundNo(),"");
+        FundModel targetFund = etfInvestmentPlanService.getFundInfo(etfGrid.getTargetFundNo(), "");
+        BigDecimal divide = etfGrid.getAmount().divide(sourceFund.getGsz(), 2, BigDecimal.ROUND_HALF_UP);
+        etfGrid.setSourceFundName(sourceFund.getName());
+        etfGrid.setTargetFundName(targetFund.getName());
+        etfGrid.setSourceNum(divide);
+        return new com.alibaba.fastjson.JSONObject().fluentPut("份额", etfGrid.getSourceNum()).fluentPut("详情", etfGrid);
+    }
 
     /**
      * 删除
