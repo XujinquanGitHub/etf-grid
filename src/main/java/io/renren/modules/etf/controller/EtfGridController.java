@@ -279,7 +279,7 @@ public class EtfGridController {
         Map<String, List<OperationModel>> listMap = updateList.stream().collect(Collectors.groupingBy(u -> u.getName()));
         Map<String, Double> collect = listMap.entrySet().stream().collect(Collectors.toMap(u -> u.getKey(), u -> u.getValue().stream().mapToDouble(m -> m.getNum().doubleValue()).sum()));
 
-        return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("买入卖出", updateList).fluentPut("观察可以买入", watchList).fluentPut("卖出价格合计", collect);
+        return new com.alibaba.fastjson.JSONObject().fluentPut("卖出金额", totalSellAmount).fluentPut("买入金额", totalBuyAmount).fluentPut("买入卖出", updateList).fluentPut("观察可以买入", watchList).fluentPut("卖出份额合计", collect);
     }
 
 
