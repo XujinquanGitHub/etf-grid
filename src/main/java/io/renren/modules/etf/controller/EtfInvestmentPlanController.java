@@ -10,6 +10,7 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import io.renren.common.utils.DateUtils;
 import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.OperationModel;
 import io.renren.modules.etf.entity.EtfGridEntity;
@@ -117,7 +118,7 @@ public class EtfInvestmentPlanController {
         List<String> uncountedFunds = new ArrayList<>();
         TreeMap<BigDecimal, String> fundInfoList = new TreeMap<>();
         for (EtfInvestmentPlanEntity plan : list) {
-            List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
+            List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && (u.getStatus().equals(1) || (u.getStatus().equals(3) && DateUtils.format(u.getSellTime()).equals(DateUtils.format(new Date()))))).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(collect)) {
                 continue;
             }
