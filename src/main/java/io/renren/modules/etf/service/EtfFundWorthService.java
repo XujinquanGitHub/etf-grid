@@ -20,6 +20,8 @@ public interface EtfFundWorthService extends IService<EtfFundWorthEntity> {
 
     List<EtfFundWorthEntity> importWorth(String fundNo);
 
+    List<EtfFundWorthEntity> getWorthByDanJuan(String fundNo, String cookies, long size);
+
     List<EtfFundWorthEntity> getListByFundNo(String fundNo);
 }
 

@@ -57,12 +57,19 @@ public class EtfFundWorthServiceImpl extends ServiceImpl<EtfFundWorthDao, EtfFun
     }
 
     @Override
+    public List<EtfFundWorthEntity> getWorthByDanJuan(String fundNo, String cookies, long size){
+        DanJuanWorthInfo fundWorth = danJuanService.getFundWorth(fundNo, null, size);
+        List<Item> items = fundWorth.getData().getItems();
+        return items.stream().map(u -> new EtfFundWorthEntity().setFundDate(u.getDate()).setFundNo(fundNo).setPercentage(u.getPercentage()).setWorth(u.getValue())).collect(Collectors.toList());
+    }
+
+    @Override
     public List<EtfFundWorthEntity> importWorth(String fundNo) {
         EtfFundWorthEntity etfFundWorthEntity = queryLastWorth(fundNo);
 
         long daySum = 10000;
         if (etfFundWorthEntity != null) {
-            daySum = DateUtil.between(etfFundWorthEntity.getFundDate(), new Date(), DateUnit.DAY);
+                daySum = DateUtil.between(etfFundWorthEntity.getFundDate(), new Date(), DateUnit.DAY);
         }
         DanJuanWorthInfo fundWorth = danJuanService.getFundWorth(fundNo, null, daySum);
         List<Item> items = fundWorth.getData().getItems();

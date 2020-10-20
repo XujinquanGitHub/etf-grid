@@ -116,7 +116,9 @@ public class EtfInvestmentPlanController {
         BigDecimal money = new BigDecimal(0);
         BigDecimal total = new BigDecimal(0);
         List<String> uncountedFunds = new ArrayList<>();
+
         TreeMap<BigDecimal, String> fundInfoList = new TreeMap<>();
+        TreeMap<String, BigDecimal> accountMoney = new TreeMap<>();
         for (EtfInvestmentPlanEntity plan : list) {
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && (u.getStatus().equals(1) || (u.getStatus().equals(3) && DateUtils.format(u.getSellTime()).equals(DateUtils.format(new Date()))))).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(collect)) {
@@ -132,11 +134,18 @@ public class EtfInvestmentPlanController {
                 fundSituationDay.setFundName(plan.getFundName()).setFundNo(plan.getFundNo()).setMakeMoney(singleAmount.setScale(2, BigDecimal.ROUND_HALF_UP)).setFundGains(fundInfo.getGszzl()).setFundAmount(new BigDecimal(sum).setScale(2, BigDecimal.ROUND_HALF_UP));
                 fundInfoList.put(fundSituationDay.getMakeMoney(), fundSituationDay.toString());
                 money = money.add(singleAmount);
+                BigDecimal bigDecimal = accountMoney.get(plan.getAccountDesc());
+                if (bigDecimal == null) {
+                    accountMoney.put(plan.getAccountDesc(), fundSituationDay.getMakeMoney());
+                } else {
+                    accountMoney.put(plan.getAccountDesc(), bigDecimal.add(fundSituationDay.getMakeMoney()));
+                }
+
             } else {
                 uncountedFunds.add("基金名：" + plan.getFundName() + "----基金代码：" + plan.getFundNo() + "----金额：" + sum);
             }
         }
-        return new JSONObject().fluentPut("1今天赚钱", money.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("1总投资额", total.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("3今天赚钱详情", fundInfoList.descendingMap().values()).fluentPut("2未统计基金", uncountedFunds);
+        return new JSONObject().fluentPut("1今天赚钱", money.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("1总投资额", total.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("3帐号详情", accountMoney).fluentPut("3今天赚钱详情", fundInfoList.descendingMap().values()).fluentPut("2未统计基金", uncountedFunds);
     }
 
 }
