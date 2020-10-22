@@ -2,6 +2,7 @@ package io.renren.modules.etf.controller;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -139,12 +140,13 @@ public class EtfGridController {
             total = total.add(item.getSellAmount());
             BigDecimal bigDecimal = totalDetail.get(item.getName());
             if (bigDecimal == null) {
-                totalDetail.put(item.getName(), new BigDecimal(item.getSellAmount().doubleValue()));
+                totalDetail.put(item.getName(), new BigDecimal(item.getSellAmount().doubleValue()).setScale(2, RoundingMode.HALF_UP));
             } else {
                 bigDecimal = bigDecimal.add(item.getSellAmount());
-                totalDetail.put(item.getName(), bigDecimal);
+                totalDetail.put(item.getName(), bigDecimal.setScale(2, RoundingMode.HALF_UP));
             }
         }
+        total = total.setScale(2, RoundingMode.HALF_UP);
 
         return new com.alibaba.fastjson.JSONObject().fluentPut("list", etfList).fluentPut("卖出总金额", total).fluentPut("卖出详情", totalDetail);
     }
@@ -172,7 +174,10 @@ public class EtfGridController {
             }
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
             FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
-            if (CollectionUtils.isEmpty(collect)) {
+            if (StringUtils.isBlank(fundInfo.getName())) {
+                fundInfo.setName(plan.getFundName());
+            }
+            if (CollectionUtils.isEmpty(collect) && (plan.getPlanOperationType().equals(1) || plan.getPlanOperationType().equals(2))) {
                 if (plan.getInitPrice().doubleValue() < fundInfo.getGsz().doubleValue()) {
                     continue;
                 }
@@ -276,7 +281,7 @@ public class EtfGridController {
 
 
         }
-        Map<String, List<OperationModel>> listMap = updateList.stream().collect(Collectors.groupingBy(u -> u.getName()));
+        Map<String, List<OperationModel>> listMap = updateList.stream().filter(u -> StringUtils.isNotBlank(u.getName())).collect(Collectors.groupingBy(u -> u.getName()));
         Map<String, Double> collect = new HashMap<>();
         if (!CollectionUtils.isEmpty(listMap)) {
             collect = listMap.entrySet().stream().filter(u -> !CollectionUtils.isEmpty(u.getValue())).collect(Collectors.toMap(u -> u.getKey(), u -> u.getValue().stream().filter(m -> m.getNum() != null).mapToDouble(m -> m.getNum().doubleValue()).sum()));

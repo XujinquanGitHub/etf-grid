@@ -78,14 +78,26 @@ public class EtfFundWorthController {
         for (String fundNo : fundList) {
             List<EtfFundWorthEntity> worthEntityList = etfFundWorthService.getWorthByDanJuan(fundNo, null, dayNum);
             worthEntityList = worthEntityList.stream().filter(u -> u.getPercentage() != null).sorted(Comparator.comparing(EtfFundWorthEntity::getFundDate)).collect(Collectors.toList());
-            double asDouble = worthEntityList.stream().mapToDouble(u -> u.getWorth().doubleValue()).max().getAsDouble();
-            List<EtfFundWorthEntity> collect = worthEntityList.stream().filter(u -> u.getWorth().doubleValue() == asDouble).sorted(Comparator.comparing(EtfFundWorthEntity::getFundDate)).collect(Collectors.toList());
-            EtfFundWorthEntity maxWorth = collect.get(collect.size() - 1);
             FundModel sourceFund = etfInvestmentPlanService.getFundInfo(fundNo, "");
+
+
+            // 最大净值
+            double maxWorthValue = worthEntityList.stream().mapToDouble(u -> u.getWorth().doubleValue()).max().getAsDouble();
+            List<EtfFundWorthEntity> collect = worthEntityList.stream().filter(u -> u.getWorth().doubleValue() == maxWorthValue).sorted(Comparator.comparing(EtfFundWorthEntity::getFundDate)).collect(Collectors.toList());
+            EtfFundWorthEntity maxWorth = collect.get(collect.size() - 1);
             BigDecimal divide = maxWorth.getWorth().subtract(sourceFund.getGsz()).divide(maxWorth.getWorth(), 4, BigDecimal.ROUND_HALF_UP);
             divide = divide.multiply(new BigDecimal(100));
+
+            // 最小净值
+            double minWorthValue = worthEntityList.stream().mapToDouble(u -> u.getWorth().doubleValue()).min().getAsDouble();
+            List<EtfFundWorthEntity> collectList = worthEntityList.stream().filter(u -> u.getWorth().doubleValue() == minWorthValue).sorted(Comparator.comparing(EtfFundWorthEntity::getFundDate)).collect(Collectors.toList());
+            EtfFundWorthEntity minWorth = collectList.get(collectList.size() - 1);
+            BigDecimal divideFail = sourceFund.getGsz().subtract(minWorth.getWorth()).divide(maxWorth.getWorth(), 4, BigDecimal.ROUND_HALF_UP);
+            divideFail = divideFail.multiply(new BigDecimal(100));
+
+
             String ss = FundSituationDay.addForNum(30, fundNo + "  " + sourceFund.getName());
-            FundDown down = new FundDown().setDesc("最近回落：" + divide + "%,      最高点时间:" + DateUtils.format(maxWorth.getFundDate())).setDown(divide).setFundName(sourceFund.getName()).setFundNo(fundNo);
+            FundDown down = new FundDown().setDesc("最近回落：" + divide + "%,      最高点时间:" + DateUtils.format(maxWorth.getFundDate())+"  从最低点回升：" + divideFail + "%,      最低点时间:" + DateUtils.format(minWorth.getFundDate())).setDown(divide).setFundName(sourceFund.getName()).setFundNo(fundNo);
             downList.add(down);
         }
         downList = downList.stream().sorted(Comparator.comparing(FundDown::getDown).reversed()).collect(Collectors.toList());
