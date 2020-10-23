@@ -177,6 +177,7 @@ public class EtfGridController {
             if (StringUtils.isBlank(fundInfo.getName())) {
                 fundInfo.setName(plan.getFundName());
             }
+            // 计算观察基金情况
             if (CollectionUtils.isEmpty(collect) && (plan.getPlanOperationType().equals(1) || plan.getPlanOperationType().equals(2))) {
                 if (plan.getInitPrice().doubleValue() < fundInfo.getGsz().doubleValue()) {
                     continue;
@@ -188,6 +189,7 @@ public class EtfGridController {
                 System.out.println(remark);
                 if (divide.compareTo(plan.getRiseRange()) > 0) {
                     OperationModel entity = new OperationModel();
+                    entity.setFailToday(fundInfo.getGszzl());
                     entity.setName(fundInfo.getName());
                     entity.setFundNo(fundInfo.getFundcode());
                     // 计算买入金额，用最低点的亏损率除以计划的亏损率乘以单批金额
@@ -201,6 +203,8 @@ public class EtfGridController {
                 }
                 continue;
             }
+
+            //计算应该买入
             if ((type == null || type == 0) && (plan.getPlanOperationType() == 1 || plan.getPlanOperationType() == 3)) {
                 for (int i = 0; i < collect.size(); i++) {
 
@@ -216,6 +220,7 @@ public class EtfGridController {
                     if (divide.compareTo(plan.getRiseRange()) > 0) {
                         OperationModel entity = new OperationModel();
                         BeanUtils.copyProperties(etfGridEntity, entity);
+                        entity.setFailToday(fundInfo.getGszzl());
                         entity.setName(fundInfo.getName());
                         entity.setFundNo(fundInfo.getFundcode());
                         entity.setSellPrice(fundInfo.getGsz());
@@ -235,6 +240,7 @@ public class EtfGridController {
                 }
             }
 
+            // 计算应该卖出基金
             if ((type == null || type == 1) && (plan.getPlanOperationType() == 1 || plan.getPlanOperationType() == 2)) {
                 EtfGridEntity etfGridEntity = collect.stream().min(Comparator.comparingDouble(u -> new Double(u.getBuyPrice().toString()))).get();
                 BigDecimal referencePrice = etfGridEntity.getBuyPrice();
@@ -251,6 +257,7 @@ public class EtfGridController {
                     divide = divide.multiply(new BigDecimal(100));
                     if (divide.compareTo(plan.getFallRange()) > 0) {
                         OperationModel entity = new OperationModel();
+                        entity.setFailToday(fundInfo.getGszzl());
                         entity.setName(fundInfo.getName());
                         entity.setFundNo(fundInfo.getFundcode());
                         // 计算买入金额，用最低点的亏损率除以计划的亏损率乘以单批金额
@@ -282,9 +289,13 @@ public class EtfGridController {
 
         }
         Map<String, List<OperationModel>> listMap = updateList.stream().filter(u -> StringUtils.isNotBlank(u.getName())).collect(Collectors.groupingBy(u -> u.getName()));
-        Map<String, Double> collect = new HashMap<>();
+        Map<String, String> collect = new HashMap<>();
         if (!CollectionUtils.isEmpty(listMap)) {
-            collect = listMap.entrySet().stream().filter(u -> !CollectionUtils.isEmpty(u.getValue())).collect(Collectors.toMap(u -> u.getKey(), u -> u.getValue().stream().filter(m -> m.getNum() != null).mapToDouble(m -> m.getNum().doubleValue()).sum()));
+            collect = listMap.entrySet().stream().filter(u -> !CollectionUtils.isEmpty(u.getValue())).collect(Collectors.toMap(u -> u.getKey(), u -> {
+                double num = u.getValue().stream().filter(m -> m.getNum() != null).mapToDouble(m -> m.getNum().doubleValue()).sum();
+                double sellMoney = u.getValue().stream().filter(m -> m.getSellAmount() != null).mapToDouble(m -> m.getSellAmount().doubleValue()).sum();
+                return "今天涨幅:" + u.getValue().get(0).getFailToday() +"         卖出份额:" + num + "                  卖出金额:" + sellMoney;
+            }));
         }
 
 

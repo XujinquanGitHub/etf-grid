@@ -4,6 +4,8 @@ import io.renren.modules.etf.entity.EtfGridEntity;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
+
 /**
  * @program: etf-grid
  * @description:
@@ -19,5 +21,8 @@ public class OperationModel extends EtfGridEntity {
     private String remark;
 
     private String accountDesc;
+
+    // 今天该基金的涨幅
+    private BigDecimal failToday;
 
 }
