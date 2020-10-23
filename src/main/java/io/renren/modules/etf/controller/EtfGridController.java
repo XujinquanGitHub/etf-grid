@@ -294,7 +294,7 @@ public class EtfGridController {
             collect = listMap.entrySet().stream().filter(u -> !CollectionUtils.isEmpty(u.getValue())).collect(Collectors.toMap(u -> u.getKey(), u -> {
                 double num = u.getValue().stream().filter(m -> m.getNum() != null).mapToDouble(m -> m.getNum().doubleValue()).sum();
                 double sellMoney = u.getValue().stream().filter(m -> m.getSellAmount() != null).mapToDouble(m -> m.getSellAmount().doubleValue()).sum();
-                return "今天涨幅:" + u.getValue().get(0).getFailToday() +"         卖出份额:" + num + "                  卖出金额:" + sellMoney;
+                return "今天涨幅:" + u.getValue().get(0).getFailToday() + "         卖出份额:" + num + "                  卖出金额:" + sellMoney;
             }));
         }
 
@@ -323,6 +323,51 @@ public class EtfGridController {
 
         return R.ok();
     }
+
+    /**
+     * 将单笔投分割成多笔
+     * 传count时，按count 平均分割
+     * 传numList时，分割详情，例如单笔10000元，分割成1000,2000,3000,4000四份
+     */
+    @RequestMapping("/separation")
+    public R separation(@RequestParam Integer id, @RequestParam(required = false) Integer count, @RequestParam(required = false) String numList) {
+        EtfGridEntity entity = etfGridService.getById(id);
+        List<EtfGridEntity> insertList = new ArrayList<>();
+        if (count != null) {
+            for (int i = 0; i < count; i++) {
+                EtfGridEntity insert = new EtfGridEntity();
+                BeanUtils.copyProperties(entity, insert);
+                insert.setNum(insert.getNum().divide(new BigDecimal(count), 6, BigDecimal.ROUND_HALF_UP));
+                insert.setBuyAmount(insert.getBuyAmount().divide(new BigDecimal(count), 6, BigDecimal.ROUND_HALF_UP));
+                insertList.add(insert);
+            }
+            if (!CollectionUtils.isEmpty(insertList)) {
+                etfGridService.removeById(id);
+                etfGridService.saveBatch(insertList);
+            }
+        } else {
+            List<BigDecimal> collect = Arrays.asList(numList.split(",")).stream().map(u -> new BigDecimal(u)).collect(Collectors.toList());
+            double sum = collect.stream().mapToDouble(u -> u.doubleValue()).sum();
+            if (!entity.getBuyAmount().equals(sum)) {
+                return R.error("金额不对，买入金额为：" + entity.getBuyAmount());
+            }
+            for (int i = 0; i < collect.size(); i++) {
+                BigDecimal value = collect.get(i);
+                EtfGridEntity insert = new EtfGridEntity();
+                BeanUtils.copyProperties(entity, insert);
+                BigDecimal percentage = value.divide(entity.getBuyAmount(), 6, BigDecimal.ROUND_HALF_UP);
+                insert.setNum(insert.getNum().multiply(percentage));
+                insert.setBuyAmount(value);
+                insertList.add(insert);
+            }
+            if (!CollectionUtils.isEmpty(insertList)) {
+                etfGridService.removeById(id);
+                etfGridService.saveBatch(insertList);
+            }
+        }
+        return R.ok();
+    }
+
 
     /**
      * 添加一个操作，自动更新
