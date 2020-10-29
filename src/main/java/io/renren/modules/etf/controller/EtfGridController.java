@@ -36,6 +36,7 @@ import io.renren.modules.etf.service.EtfOperationService;
 import io.renren.modules.etf.service.impl.AliPayService;
 import io.renren.modules.etf.service.impl.DanJuanService;
 import io.renren.modules.etf.service.impl.SwService;
+import io.renren.modules.etf.xueqiu.XueQiuService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,9 @@ public class EtfGridController {
 
     @Autowired
     private EtfOperationService etfOperationService;
+
+    @Autowired
+    private XueQiuService xueQiuService;
 
     /**
      * 列表
@@ -474,7 +478,9 @@ public class EtfGridController {
         List<StockList> stockList = fundDetails.getData().getFundPosition().getStockList();
         Map<String, BigDecimal> industryProportion = new TreeMap<String, BigDecimal>();
         BigDecimal topTenTotal = new BigDecimal(0);
+        double stockPercent = fundDetails.getData().getFundPosition().getStockPercent();
         Map<String, Double> collect = new LinkedHashMap<>();
+        BigDecimal fundTTM = new BigDecimal(0);
         for (StockList st : stockList) {
             collect.put(st.getName(), st.getPercent());
             topTenTotal = topTenTotal.add(new BigDecimal(st.getPercent()));
@@ -489,6 +495,11 @@ public class EtfGridController {
                 bigDecimal = new BigDecimal(0);
             }
             industryProportion.put(stockModel.getIndustryName(), bigDecimal.add(new BigDecimal(st.getPercent())).setScale(2, BigDecimal.ROUND_HALF_UP));
+
+            //
+//            BigDecimal stockTTM = xueQiuService.getStockTTM(st.getCode());
+//            BigDecimal multiply = new BigDecimal(st.getPercent() / stockPercent).multiply(stockTTM);
+//            fundTTM = fundTTM.add(multiply);
         }
         // 降序
         List<Map.Entry<String, BigDecimal>> list = new ArrayList<Map.Entry<String, BigDecimal>>(industryProportion.entrySet());
@@ -506,7 +517,7 @@ public class EtfGridController {
         List<ManagerList> managerList = fundDetails.getData().getManagerList();
         AchievementList achievementList = managerList.stream().flatMap(u -> u.getAchievementList().stream()).filter(u -> u.getFundCode().equals(fundNO)).findFirst().get();
 
-        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("股票占比", fundDetails.getData().getFundPosition().getStockPercent()).fluentPut("前十大股票行业占比", map).fluentPut("前十大股票占比", collect).fluentPut("前十大股票总比", topTenTotal.setScale(2, BigDecimal.ROUND_HALF_UP));
+        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("基金市盈率(动)", fundTTM).fluentPut("股票占比", stockPercent).fluentPut("前十大股票行业占比", map).fluentPut("前十大股票占比", collect).fluentPut("前十大股票总比", topTenTotal.setScale(2, BigDecimal.ROUND_HALF_UP));
     }
 
     @Autowired
