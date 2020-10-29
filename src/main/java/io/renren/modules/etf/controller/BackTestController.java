@@ -3,19 +3,17 @@ package io.renren.modules.etf.controller;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONObject;
-import io.renren.common.utils.DateUtils;
+import io.renren.modules.etf.BackGridRequest;
 import io.renren.modules.etf.FundDown;
-import io.renren.modules.etf.FundModel;
 import io.renren.modules.etf.OperationModel;
 import io.renren.modules.etf.entity.EtfFundWorthEntity;
 import io.renren.modules.etf.entity.EtfGridEntity;
 import io.renren.modules.etf.service.EtfFundWorthService;
-import io.renren.modules.etf.service.FundSituationDay;
 import io.renren.modules.etf.service.impl.DanJuanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
@@ -39,13 +37,16 @@ public class BackTestController {
     private DanJuanService danJuanService;
 
     @RequestMapping("/regardlessOfTheValuationGridBackTest")
-    public JSONObject regardlessOfTheValuationGridBackTest(@RequestParam String fundNo, @RequestParam String day) {
+    public JSONObject regardlessOfTheValuationGridBackTest(@RequestBody BackGridRequest request) {
+        String fundNo = request.getFundNo();
+        String day = request.getStartDay();
+
         // 每一网投入多少
-        BigDecimal gridPrice = new BigDecimal(100);
+        BigDecimal gridPrice = request.getGridPrice();
         // 每下坠几个百分点加入一网
-        BigDecimal gridPercentage = new BigDecimal(-0.1);
+        BigDecimal gridPercentage = request.getGridPercentage();
         // 每网上升几个百分点卖出
-        BigDecimal gridFailPercentage = new BigDecimal(5);
+        BigDecimal gridFailPercentage = request.getGridFailPercentage();
 
         List<OperationModel> gridEntityList = new ArrayList<>();
 
@@ -96,8 +97,8 @@ public class BackTestController {
 
         }
         double buyTotalMoney = gridEntityList.stream().mapToDouble(u -> u.getBuyAmount().doubleValue()).sum();
-        double sellTotalMoney = gridEntityList.stream().filter(u->u.getStatus().equals(3)).mapToDouble(u -> u.getSellAmount().doubleValue()).sum();
-        double buyMoneySell=gridEntityList.stream().filter(u->u.getStatus().equals(3)).mapToDouble(u -> u.getBuyAmount().doubleValue()).sum();
+        double sellTotalMoney = gridEntityList.stream().filter(u -> u.getStatus().equals(3)).mapToDouble(u -> u.getSellAmount().doubleValue()).sum();
+        double buyMoneySell = gridEntityList.stream().filter(u -> u.getStatus().equals(3)).mapToDouble(u -> u.getBuyAmount().doubleValue()).sum();
         return result.fluentPut("基金买卖情况", gridEntityList).fluentPut("总买入", buyTotalMoney).fluentPut("总卖出", sellTotalMoney).fluentPut("利润率", (sellTotalMoney - buyMoneySell) / buyMoneySell);
     }
 
