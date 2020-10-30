@@ -26,5 +26,7 @@ public class BackGridRequest {
     // 每网上升几个百分点卖出
     private BigDecimal gridFailPercentage;
 
+    private BigDecimal investmentAmount;
+
 
 }

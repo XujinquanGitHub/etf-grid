@@ -25,4 +25,6 @@ public class OperationModel extends EtfGridEntity {
     // 今天该基金的涨幅
     private BigDecimal failToday;
 
+    private BigDecimal amountThatCanBeInvested;
+
 }
