@@ -1,5 +1,6 @@
 package io.renren.modules.etf.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
@@ -10,13 +11,14 @@ import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
 import io.renren.modules.etf.danjuan.fund.detail.FundDetails;
 import io.renren.modules.etf.danjuan.index.IndexUpsAndDowns;
 import io.renren.modules.etf.danjuan.trade.SingleFundTradeList;
+import io.renren.modules.etf.danjuan.valuation.DanJuanValuation;
+import io.renren.modules.etf.danjuan.valuation.Item;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @program: etf-grid
@@ -28,6 +30,9 @@ import java.util.Map;
 public class DanJuanService {
 
     private Map<String, FundDetails> industryProportionMap = new HashMap<>();
+
+    private Map<String, List<Item>> danJuanValuationMap = new HashMap<>();
+
 
     public DanJuanTradeList getTradeList(String zCode, String fundCode, String cookies) {
 
@@ -100,6 +105,36 @@ public class DanJuanService {
         String body = get.execute().body();
         System.out.println("请求基金详情：" + body);
         return JSON.parseObject(body, DanJuanFundInfo.class);
+    }
+
+    public List<Item> getFundValuation(String cookies) {
+        String s = DateUtil.formatDate(new Date());
+        List<Item> itemList = danJuanValuationMap.get(s);
+        if (!CollectionUtils.isEmpty(itemList)) {
+            return itemList;
+        }
+        danJuanValuationMap.clear();
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/index_eva/dj");
+        get.addHeaders(getHead(cookies));
+        String body = get.execute().body();
+        System.out.println("基金估值：" + body);
+        DanJuanValuation danJuanValuation = JSON.parseObject(body, DanJuanValuation.class);
+        List<Item> items = danJuanValuation.getData().getItems();
+        danJuanValuationMap.put(s, items);
+        return items;
+    }
+
+    public Optional<Item> getFundValuationByFundTypeName(String fundTypeName) {
+        List<Item> fundValuation = getFundValuation(null);
+        return fundValuation.stream().filter(u -> fundTypeName.equals(u.getName()) || fundTypeName.contains(u.getName()) || u.getName().contains(fundTypeName)).findFirst();
+    }
+
+    public String getValuationStringByFundTypeName(String fundTypeName) {
+        Optional<Item> fundValuationByFundTypeName = getFundValuationByFundTypeName(fundTypeName);
+        if (fundValuationByFundTypeName.isPresent()) {
+            return fundValuationByFundTypeName.get().getEvaType();
+        }
+        return "未知";
     }
 
 
