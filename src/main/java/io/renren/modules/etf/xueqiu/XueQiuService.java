@@ -3,6 +3,7 @@ package io.renren.modules.etf.xueqiu;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSON;
 import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
+import io.renren.modules.etf.xueqiu.stock.Quote;
 import io.renren.modules.etf.xueqiu.stock.StockQuote;
 import org.springframework.stereotype.Service;
 
@@ -40,10 +41,9 @@ heads.put("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
         return JSON.parseObject(body, StockQuote.class);
     }
 
-    public BigDecimal getStockTTM(String stockNo) {
+    public Quote getStockTTM(String stockNo) {
         StockQuote stockDetail = getStockDetail(stockNo);
-        double peTtm = stockDetail.getData().getQuote().getPeTtm();
-        return new BigDecimal(peTtm);
+        return stockDetail.getData().getQuote();
     }
 
 }

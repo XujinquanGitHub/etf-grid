@@ -37,6 +37,7 @@ import io.renren.modules.etf.service.impl.AliPayService;
 import io.renren.modules.etf.service.impl.DanJuanService;
 import io.renren.modules.etf.service.impl.SwService;
 import io.renren.modules.etf.xueqiu.XueQiuService;
+import io.renren.modules.etf.xueqiu.stock.Quote;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -477,10 +478,11 @@ public class EtfGridController {
         List<StockModel> allIndustryIndexes = swService.getAllIndustryIndexes();
         List<StockList> stockList = fundDetails.getData().getFundPosition().getStockList();
         Map<String, BigDecimal> industryProportion = new TreeMap<String, BigDecimal>();
-        BigDecimal topTenTotal = new BigDecimal(stockList.stream().mapToDouble(u->u.getPercent()).sum());
+        BigDecimal topTenTotal = new BigDecimal(stockList.stream().mapToDouble(u -> u.getPercent()).sum());
         double stockPercent = fundDetails.getData().getFundPosition().getStockPercent();
         Map<String, Double> collect = new LinkedHashMap<>();
         BigDecimal fundTTM = new BigDecimal(0);
+        BigDecimal fundPb = new BigDecimal(0);
         for (StockList st : stockList) {
             collect.put(st.getName(), st.getPercent());
             Optional<StockModel> first = allIndustryIndexes.stream().filter(u -> st.getCode().equals(u.getStockCode())).findFirst();
@@ -496,9 +498,13 @@ public class EtfGridController {
             industryProportion.put(stockModel.getIndustryName() + "   " + danJuanService.getValuationStringByFundTypeName(stockModel.getIndustryName()), bigDecimal.add(new BigDecimal(st.getPercent())).setScale(2, BigDecimal.ROUND_HALF_UP));
 
             //
-            BigDecimal stockTTM = xueQiuService.getStockTTM(st.getXqSymbol());
+            Quote quote = xueQiuService.getStockTTM(st.getXqSymbol());
+            BigDecimal stockTTM = new BigDecimal(quote.getPeTtm());
+            BigDecimal stockPb = new BigDecimal(quote.getPb());
             BigDecimal multiply = new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockTTM);
             fundTTM = fundTTM.add(multiply);
+
+            fundPb=fundPb.add(new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockPb));
         }
         // 降序
         List<Map.Entry<String, BigDecimal>> list = new ArrayList<Map.Entry<String, BigDecimal>>(industryProportion.entrySet());
@@ -516,7 +522,7 @@ public class EtfGridController {
         List<ManagerList> managerList = fundDetails.getData().getManagerList();
         AchievementList achievementList = managerList.stream().flatMap(u -> u.getAchievementList().stream()).filter(u -> u.getFundCode().equals(fundNO)).findFirst().get();
 
-        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("基金市盈率(动)", fundTTM.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("股票占比", stockPercent).fluentPut("前十大股票行业占比", map).fluentPut("前十大股票占比", collect).fluentPut("前十大股票总比", topTenTotal.setScale(2, BigDecimal.ROUND_HALF_UP));
+        return new com.alibaba.fastjson.JSONObject().fluentPut("基金名", achievementList.getFundsname()).fluentPut("基金市盈率(动)", fundTTM.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("市净率", fundPb.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("股票占比", stockPercent).fluentPut("前十大股票行业占比", map).fluentPut("前十大股票占比", collect).fluentPut("前十大股票总比", topTenTotal.setScale(2, BigDecimal.ROUND_HALF_UP));
     }
 
     @Autowired
