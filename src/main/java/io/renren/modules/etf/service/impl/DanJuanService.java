@@ -1,5 +1,6 @@
 package io.renren.modules.etf.service.impl;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
@@ -10,14 +11,21 @@ import io.renren.modules.etf.danjuan.DanJuanTradeList;
 import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
 import io.renren.modules.etf.danjuan.fund.detail.FundDetails;
 import io.renren.modules.etf.danjuan.index.IndexUpsAndDowns;
+import io.renren.modules.etf.danjuan.pb.HorizontalLine;
+import io.renren.modules.etf.danjuan.pb.IndexEvaPbGrowth;
+import io.renren.modules.etf.danjuan.pb.PbHistoryModel;
+import io.renren.modules.etf.danjuan.pe.IndexEvaPeGrowth;
+import io.renren.modules.etf.danjuan.pe.PeHistoryModel;
 import io.renren.modules.etf.danjuan.trade.SingleFundTradeList;
 import io.renren.modules.etf.danjuan.valuation.DanJuanValuation;
 import io.renren.modules.etf.danjuan.valuation.Item;
 import io.renren.modules.etf.danjuan.worth.DanJuanWorthInfo;
 import org.apache.commons.lang.StringUtils;
+import org.postgresql.jdbc.TimestampUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -32,6 +40,10 @@ public class DanJuanService {
     private Map<String, FundDetails> industryProportionMap = new HashMap<>();
 
     private Map<String, List<Item>> danJuanValuationMap = new HashMap<>();
+
+    private Map<String, PbHistoryModel> pbHistoryModelMap = new HashMap<>();
+
+    private Map<String, PeHistoryModel> peHistoryModelMap = new HashMap<>();
 
 
     public DanJuanTradeList getTradeList(String zCode, String fundCode, String cookies) {
@@ -123,6 +135,70 @@ public class DanJuanService {
         danJuanValuationMap.put(s, items);
         return items;
     }
+
+    public PbHistoryModel getPbHistory(String cookies, String indexNo) {
+        String s = DateUtil.formatDate(new Date());
+        PbHistoryModel pbHistoryModel1 = pbHistoryModelMap.get(s);
+        if (pbHistoryModel1 != null) {
+            return pbHistoryModel1;
+        }
+        danJuanValuationMap.clear();
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/index_eva/pb_history/" + indexNo + "?day=all");
+        get.addHeaders(getHead(cookies));
+        String body = get.execute().body();
+        System.out.println("基金估值：" + body);
+        PbHistoryModel pbHistoryModel = JSON.parseObject(body, PbHistoryModel.class);
+        pbHistoryModelMap.put(s, pbHistoryModel);
+        return pbHistoryModel1;
+    }
+
+    public PeHistoryModel getPeHistory(String cookies, String indexNo) {
+        String s = DateUtil.formatDate(new Date());
+        PeHistoryModel peHistoryModel1 = peHistoryModelMap.get(s);
+        if (peHistoryModel1 != null) {
+            return peHistoryModel1;
+        }
+        danJuanValuationMap.clear();
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/index_eva/pe_history/" + indexNo + "?day=all");
+        get.addHeaders(getHead(cookies));
+        String body = get.execute().body();
+        System.out.println("基金估值：" + body);
+        PeHistoryModel peHistoryModel = JSON.parseObject(body, PeHistoryModel.class);
+        peHistoryModelMap.put(s, peHistoryModel);
+        return peHistoryModel;
+    }
+
+    public boolean isLow(String indexNo, DateTime dateTime) {
+        Timestamp timestamp = DateUtil.parse(DateUtil.formatDateTime(dateTime)).toTimestamp();
+
+        PbHistoryModel pbHistory = getPbHistory(null, indexNo);
+        List<HorizontalLine> horizontalLines = pbHistory.getData().getHorizontalLines();
+        double lowPb = horizontalLines.stream().mapToDouble(u -> u.getLineValue()).min().getAsDouble();
+        Optional<IndexEvaPbGrowth> first = pbHistory.getData().getIndexEvaPbGrowths().stream().filter(u -> timestamp.equals(u.getTs())).findFirst();
+        if (!first.isPresent()) {
+            System.out.println("未查询到该交易日");
+            return false;
+        }
+        IndexEvaPbGrowth indexEvaPbGrowth = first.get();
+        if (indexEvaPbGrowth.getPb() > lowPb) {
+            return false;
+        }
+
+        PeHistoryModel peHistory = getPeHistory(null, indexNo);
+        List<io.renren.modules.etf.danjuan.pe.HorizontalLine> peLines = peHistory.getData().getHorizontalLines();
+        double lowPe = peLines.stream().mapToDouble(u -> u.getLineValue()).min().getAsDouble();
+        Optional<IndexEvaPeGrowth> two = peHistory.getData().getIndexEvaPeGrowths().stream().filter(u -> timestamp.equals(u.getTs())).findFirst();
+        if (!two.isPresent()) {
+            System.out.println("未查询到该交易日");
+            return false;
+        }
+        IndexEvaPeGrowth peGrowth = two.get();
+        if (peGrowth.getPe() > lowPb) {
+            return false;
+        }
+        return true;
+    }
+
 
     public Optional<Item> getFundValuationByFundTypeName(String fundTypeName) {
         List<Item> fundValuation = getFundValuation(null);

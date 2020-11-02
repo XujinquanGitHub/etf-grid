@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -117,7 +118,7 @@ public class BackTestController {
         double totalUnsold = gridEntityList.stream().filter(u -> u.getStatus().equals(1)).mapToDouble(u -> etfFundWorthEntity.getWorth().multiply(u.getNum()).doubleValue()).sum();
         BigDecimal totalMoney = investmentAmount.add(new BigDecimal(totalUnsold));
         BigDecimal profitMargin = totalMoney.subtract(request.getInvestmentAmount()).divide(request.getInvestmentAmount(), 6, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
-        return result.fluentPut("基金买卖情况", gridEntityList).fluentPut("未卖出金额", totalUnsold).fluentPut("总金额",totalMoney).fluentPut("利润率",profitMargin);
+        return result.fluentPut("基金买卖情况", gridEntityList).fluentPut("未卖出金额", totalUnsold).fluentPut("总金额",totalMoney.setScale(2, RoundingMode.HALF_UP)).fluentPut("利润率",profitMargin);
     }
 
     private OperationModel buy(BigDecimal startWorth, Date fundDate, BigDecimal money, String fundNo, Date lastBuyOrSellDate, BigDecimal invertMoney) {
