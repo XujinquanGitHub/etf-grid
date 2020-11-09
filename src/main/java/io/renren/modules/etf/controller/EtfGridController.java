@@ -178,7 +178,7 @@ public class EtfGridController {
                 continue;
             }
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
-            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
+            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo(),plan.getVenueNo());
             if (StringUtils.isBlank(fundInfo.getName())) {
                 fundInfo.setName(plan.getFundName());
             }

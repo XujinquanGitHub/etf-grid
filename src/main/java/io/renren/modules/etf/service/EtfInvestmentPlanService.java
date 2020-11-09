@@ -20,6 +20,7 @@ public interface EtfInvestmentPlanService extends IService<EtfInvestmentPlanEnti
 
 
     FundModel getFundInfo(String fundNo,String indexNo);
+    FundModel getFundInfo(String fundNo,String indexNo,String venueNo);
 
     List<EtfInvestmentPlanEntity> queryList(Map<String, Object> params);
 

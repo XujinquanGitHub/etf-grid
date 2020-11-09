@@ -14,6 +14,9 @@ import io.renren.modules.etf.danjuan.index.IndexUpsAndDowns;
 import io.renren.modules.etf.dao.EtfInvestmentPlanDao;
 import io.renren.modules.etf.entity.EtfInvestmentPlanEntity;
 import io.renren.modules.etf.service.EtfInvestmentPlanService;
+import io.renren.modules.etf.xueqiu.XueQiuService;
+import io.renren.modules.etf.xueqiu.stock.Quote;
+import io.renren.modules.etf.xueqiu.stock.StockQuote;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,9 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
 
     @Autowired
     private DanJuanService danJuanService;
+
+    @Autowired
+    private XueQiuService xueQiuService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -71,9 +77,13 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
 
     }
 
-
     @Override
     public FundModel getFundInfo(String fundNo, String indexNo) {
+        return getFundInfo(fundNo, indexNo, "");
+    }
+
+    @Override
+    public FundModel getFundInfo(String fundNo, String indexNo, String venueNo) {
         FundModel result = null;
         try {
             result = getFundInfoByTianTian(fundNo);
@@ -89,6 +99,17 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
                 FundDerived fundDerived = data.getFundDerived();
                 // 从蛋卷获取到的是前一个交易日的净值
                 result = new FundModel().setFundcode(fundNo).setName(data.getFdName()).setGsz(fundDerived.getUnit_nav()).setDwjz(fundDerived.getUnit_nav());
+                if (StringUtils.isNotBlank(venueNo)) {
+                    Quote stockTTM = xueQiuService.getStockTTM(venueNo);
+                    if (stockTTM != null) {
+                        double percent = stockTTM.getPercent();
+                        BigDecimal pr = new BigDecimal(percent).setScale(4, BigDecimal.ROUND_HALF_UP);
+                        result.setGszzl(pr);
+                        BigDecimal amountPercent = new BigDecimal(100).add(pr).divide(new BigDecimal(100), 4, BigDecimal.ROUND_HALF_UP);
+                        BigDecimal newPrice = fundDerived.getUnit_nav().multiply(amountPercent);
+                        result.setGsz(newPrice);
+                    }
+                }
                 if (StringUtils.isNotBlank(indexNo)) {
                     IndexUpsAndDowns mainIndexChanges = danJuanService.getMainIndexChanges();
                     Optional<Datum> first = mainIndexChanges.getData().stream().filter(u -> indexNo.equals(u.getSymbol())).findFirst();

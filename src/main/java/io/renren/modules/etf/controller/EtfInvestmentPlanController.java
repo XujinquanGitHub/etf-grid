@@ -124,7 +124,7 @@ public class EtfInvestmentPlanController {
             if (CollectionUtils.isEmpty(collect)) {
                 continue;
             }
-            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo());
+            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo(),plan.getVenueNo());
             // 计算当开盘时所值金额
             double sum = collect.stream().mapToDouble(u -> u.getNum().multiply(fundInfo.getDwjz()).doubleValue()).sum();
             total = total.add(new BigDecimal(sum));

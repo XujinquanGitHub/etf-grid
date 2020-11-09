@@ -92,4 +92,7 @@ public class EtfInvestmentPlanEntity extends Model<EtfInvestmentPlanEntity> impl
 	private String accountDesc;
 
 
+	private String venueNo;
+
+
 }
