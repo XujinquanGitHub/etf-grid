@@ -178,7 +178,7 @@ public class EtfGridController {
                 continue;
             }
             List<EtfGridEntity> collect = gridEntityList.stream().filter(u -> plan.getId().equals(u.getPlanId()) && u.getStatus().equals(1)).collect(Collectors.toList());
-            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo(),plan.getVenueNo());
+            FundModel fundInfo = etfInvestmentPlanService.getFundInfo(plan.getFundNo(), plan.getIndexNo(), plan.getVenueNo());
             if (StringUtils.isBlank(fundInfo.getName())) {
                 fundInfo.setName(plan.getFundName());
             }
@@ -220,7 +220,7 @@ public class EtfGridController {
                     // 当前价格减去买入价格
                     BigDecimal subtract = fundInfo.getGsz().subtract(etfGridEntity.getBuyPrice());
                     BigDecimal divide = subtract.divide(etfGridEntity.getBuyPrice(), 6, BigDecimal.ROUND_HALF_UP);
-                    System.out.println("涨幅：" + divide.multiply(new BigDecimal(100)).toString() + "%  赚:" + etfGridEntity.getBuyAmount().multiply(divide));
+                    System.out.println("--" + fundInfo.getName() + "--  涨幅：" + divide.multiply(new BigDecimal(100)).toString() + "%  赚:" + etfGridEntity.getBuyAmount().multiply(divide));
                     divide = divide.multiply(new BigDecimal(100));
                     if (divide.compareTo(plan.getRiseRange()) > 0) {
                         OperationModel entity = new OperationModel();
@@ -490,7 +490,7 @@ public class EtfGridController {
             BigDecimal stockPb = new BigDecimal(quote.getPb());
             BigDecimal multiply = new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockTTM);
             fundTTM = fundTTM.add(multiply);
-            fundPb=fundPb.add(new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockPb));
+            fundPb = fundPb.add(new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockPb));
 
             collect.put(st.getName(), st.getPercent());
             Optional<StockModel> first = allIndustryIndexes.stream().filter(u -> st.getCode().equals(u.getStockCode())).findFirst();
