@@ -484,6 +484,14 @@ public class EtfGridController {
         BigDecimal fundTTM = new BigDecimal(0);
         BigDecimal fundPb = new BigDecimal(0);
         for (StockList st : stockList) {
+
+            Quote quote = xueQiuService.getStockTTM(st.getXqSymbol());
+            BigDecimal stockTTM = new BigDecimal(quote.getPeTtm());
+            BigDecimal stockPb = new BigDecimal(quote.getPb());
+            BigDecimal multiply = new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockTTM);
+            fundTTM = fundTTM.add(multiply);
+            fundPb=fundPb.add(new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockPb));
+
             collect.put(st.getName(), st.getPercent());
             Optional<StockModel> first = allIndustryIndexes.stream().filter(u -> st.getCode().equals(u.getStockCode())).findFirst();
             if (!first.isPresent()) {
@@ -498,13 +506,7 @@ public class EtfGridController {
             industryProportion.put(stockModel.getIndustryName() + "   " + danJuanService.getValuationStringByFundTypeName(stockModel.getIndustryName()), bigDecimal.add(new BigDecimal(st.getPercent())).setScale(2, BigDecimal.ROUND_HALF_UP));
 
             //
-            Quote quote = xueQiuService.getStockTTM(st.getXqSymbol());
-            BigDecimal stockTTM = new BigDecimal(quote.getPeTtm());
-            BigDecimal stockPb = new BigDecimal(quote.getPb());
-            BigDecimal multiply = new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockTTM);
-            fundTTM = fundTTM.add(multiply);
 
-            fundPb=fundPb.add(new BigDecimal(st.getPercent() / topTenTotal.doubleValue()).multiply(stockPb));
         }
         // 降序
         List<Map.Entry<String, BigDecimal>> list = new ArrayList<Map.Entry<String, BigDecimal>>(industryProportion.entrySet());
