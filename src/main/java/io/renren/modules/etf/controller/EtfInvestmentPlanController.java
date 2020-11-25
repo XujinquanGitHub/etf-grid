@@ -142,7 +142,7 @@ public class EtfInvestmentPlanController {
                 }
 
             } else {
-                uncountedFunds.add("基金名：" + plan.getFundName() + "----基金代码：" + plan.getFundNo() + "----金额：" + sum);
+                uncountedFunds.add("基金名：" + plan.getFundName() + "----基金代码：" + plan.getFundNo() + "----金额："+ String.format("%.2f", sum));
             }
         }
         return new JSONObject().fluentPut("1今天赚钱", money.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("1总投资额", total.setScale(2, BigDecimal.ROUND_HALF_UP)).fluentPut("3帐号详情", accountMoney).fluentPut("3今天赚钱详情", fundInfoList.descendingMap().values()).fluentPut("2未统计基金", uncountedFunds);
