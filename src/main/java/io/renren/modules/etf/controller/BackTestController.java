@@ -8,15 +8,19 @@ import io.renren.modules.etf.FundDown;
 import io.renren.modules.etf.OperationModel;
 import io.renren.modules.etf.entity.EtfFundWorthEntity;
 import io.renren.modules.etf.entity.EtfGridEntity;
+import io.renren.modules.etf.entity.EtfThinkEntity;
 import io.renren.modules.etf.service.EtfFundWorthService;
+import io.renren.modules.etf.service.EtfThinkService;
 import io.renren.modules.etf.service.impl.DanJuanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,6 +40,12 @@ public class BackTestController {
 
     @Autowired
     private DanJuanService danJuanService;
+
+    @Autowired
+    private EtfThinkService thinkService;
+
+    @Autowired
+    private EtfInvestmentPlanController planController;
 
     @RequestMapping("/regardlessOfTheValuationGridBackTest")
     public JSONObject regardlessOfTheValuationGridBackTest(@RequestBody BackGridRequest request) {
@@ -118,7 +128,7 @@ public class BackTestController {
         double totalUnsold = gridEntityList.stream().filter(u -> u.getStatus().equals(1)).mapToDouble(u -> etfFundWorthEntity.getWorth().multiply(u.getNum()).doubleValue()).sum();
         BigDecimal totalMoney = investmentAmount.add(new BigDecimal(totalUnsold));
         BigDecimal profitMargin = totalMoney.subtract(request.getInvestmentAmount()).divide(request.getInvestmentAmount(), 6, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
-        return result.fluentPut("基金买卖情况", gridEntityList).fluentPut("未卖出金额", totalUnsold).fluentPut("总金额",totalMoney.setScale(2, RoundingMode.HALF_UP)).fluentPut("利润率",profitMargin);
+        return result.fluentPut("基金买卖情况", gridEntityList).fluentPut("未卖出金额", totalUnsold).fluentPut("总金额", totalMoney.setScale(2, RoundingMode.HALF_UP)).fluentPut("利润率", profitMargin);
     }
 
     private OperationModel buy(BigDecimal startWorth, Date fundDate, BigDecimal money, String fundNo, Date lastBuyOrSellDate, BigDecimal invertMoney) {
@@ -146,6 +156,35 @@ public class BackTestController {
         long day = DateUtil.betweenDay(startDate, endDate, false);
         BigDecimal divide = new BigDecimal(day).divide(new BigDecimal(365), 6, BigDecimal.ROUND_HALF_UP);
         return divide.multiply(fundPercentage).multiply(startMoney).add(startMoney);
+    }
+
+
+    @RequestMapping("/calculateAnnualCompoundIncome")
+    public JSONObject calculateAnnualCompoundIncome(@RequestParam BigDecimal year, @RequestParam BigDecimal income, @RequestParam BigDecimal wage,@RequestParam  BigDecimal startMoney) {
+        BigDecimal totalMoney = new BigDecimal(startMoney.doubleValue());
+        BigDecimal totalPrincipal=new BigDecimal(startMoney.doubleValue());
+        Integer monNum = year.multiply(new BigDecimal(12)).intValue();
+        for (int i = 0; i < monNum; i++) {
+            totalPrincipal = totalPrincipal.add(wage);
+            totalMoney=totalMoney.multiply(income).add(totalMoney).add(wage);
+        }
+        totalMoney = totalMoney.setScale(2, RoundingMode.HALF_UP);
+        totalPrincipal = totalPrincipal.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal annualizedIncome = new BigDecimal(1);
+        for (int i = 0; i < 12; i++) {
+            annualizedIncome=annualizedIncome.multiply(income).add(annualizedIncome);
+        }
+        annualizedIncome = annualizedIncome.setScale(4, RoundingMode.HALF_UP);
+        return new JSONObject().fluentPut("总金额",totalMoney).fluentPut("总本金",totalPrincipal).fluentPut("年化收益",annualizedIncome);
+    }
+
+
+    @RequestMapping("/addThink")
+    public JSONObject addThink(@RequestBody EtfThinkEntity think) throws Exception {
+        JSONObject moneyMakeToday = planController.getMoneyMakeToday("");
+        think.setUpsDowns(moneyMakeToday.toJSONString());
+        thinkService.save(think);
+        return new JSONObject().fluentPut("想法",think.getContext()).fluentPut("涨跌情况",think.getUpsDowns());
     }
 
 }

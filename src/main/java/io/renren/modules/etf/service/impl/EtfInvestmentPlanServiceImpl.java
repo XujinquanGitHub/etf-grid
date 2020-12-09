@@ -117,6 +117,7 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
                         IndexUpsAndDowns industryIndexChanges = danJuanService.getIndustryIndexChanges();
                         first = industryIndexChanges.getData().stream().filter(u -> indexNo.equals(u.getSymbol())).findFirst();
                     }
+
                     if (first.isPresent()) {
                         Datum datum = first.get();
                         BigDecimal pr = new BigDecimal(datum.getPercentage()).divide(new BigDecimal(100), 6, BigDecimal.ROUND_HALF_UP);
@@ -127,7 +128,7 @@ public class EtfInvestmentPlanServiceImpl extends ServiceImpl<EtfInvestmentPlanD
                         BigDecimal newPrice = fundDerived.getUnit_nav().multiply(amountPercent);
                         result.setGsz(newPrice);
                     } else {
-                        result.setGszzl(new BigDecimal(0)).setDwjz(fundDerived.getUnit_nav());
+                        result.setGszzl(danJuanService.getIndexPercent(indexNo, null)).setDwjz(fundDerived.getUnit_nav());
                     }
                 }
             } catch (Exception exs) {

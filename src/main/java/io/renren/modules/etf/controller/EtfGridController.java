@@ -223,7 +223,7 @@ public class EtfGridController {
                     // 当前价格减去买入价格
                     BigDecimal subtract = fundInfo.getGsz().subtract(etfGridEntity.getBuyPrice());
                     BigDecimal divide = subtract.divide(etfGridEntity.getBuyPrice(), 6, BigDecimal.ROUND_HALF_UP);
-                    System.out.println("--" + fundInfo.getName() + "--  涨幅：" + divide.multiply(new BigDecimal(100)).toString() + "%  赚:" + etfGridEntity.getBuyAmount().multiply(divide));
+                    System.out.println("--" + fundInfo.getName() + "--  涨幅：" + divide.multiply(new BigDecimal(100)).toString() + "%  赚:" + etfGridEntity.getBuyAmount().multiply(divide) +" 买入金额:" + etfGridEntity.getBuyAmount() +" 买入时间:" + DateUtil.formatDate( etfGridEntity.getBuyTime()));
                     divide = divide.multiply(new BigDecimal(100));
                     if (divide.compareTo(plan.getRiseRange()) > 0) {
                         OperationModel entity = new OperationModel();
@@ -502,11 +502,12 @@ public class EtfGridController {
                 continue;
             }
             StockModel stockModel = first.get();
-            BigDecimal bigDecimal = industryProportion.get(stockModel.getIndustryName());
+            String key = stockModel.getIndustryName() + "   " + danJuanService.getValuationStringByFundTypeName(stockModel.getIndustryName());
+            BigDecimal bigDecimal = industryProportion.get(key);
             if (bigDecimal == null) {
                 bigDecimal = new BigDecimal(0);
             }
-            industryProportion.put(stockModel.getIndustryName() + "   " + danJuanService.getValuationStringByFundTypeName(stockModel.getIndustryName()), bigDecimal.add(new BigDecimal(st.getPercent())).setScale(2, BigDecimal.ROUND_HALF_UP));
+            industryProportion.put(key, bigDecimal.add(new BigDecimal(st.getPercent())).setScale(2, BigDecimal.ROUND_HALF_UP));
 
             //
 

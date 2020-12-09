@@ -6,6 +6,7 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import io.renren.modules.etf.danjuan.DanJuanModel;
 import io.renren.modules.etf.danjuan.DanJuanTradeList;
 import io.renren.modules.etf.danjuan.fund.DanJuanFundInfo;
@@ -25,6 +26,7 @@ import org.postgresql.jdbc.TimestampUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -79,6 +81,15 @@ public class DanJuanService {
         String body = get.execute().body();
         System.out.println("请求订单详情：" + body);
         return JSON.parseObject(body, DanJuanModel.class);
+    }
+
+    public BigDecimal getIndexPercent(String orderId, String cookies) {
+        HttpRequest get = HttpRequest.get("https://danjuanapp.com/djapi/fundx/base/index/detail?symbol=" + orderId);
+        get.addHeaders(getHead(cookies));
+        String body = get.execute().body();
+        System.out.println("请求指数详情：" + body);
+        JSONObject jsonObject = JSON.parseObject(body);
+        return jsonObject.getJSONObject("data").getBigDecimal("percent");
     }
 
 
