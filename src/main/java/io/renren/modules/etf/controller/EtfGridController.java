@@ -203,7 +203,7 @@ public class EtfGridController {
                     // 计算买入金额，用最低点的亏损率除以计划的亏损率乘以单批金额
                     BigDecimal amount = divide.divide(plan.getFallRange(), 6, BigDecimal.ROUND_HALF_UP).multiply(plan.getSingleAmount());
                     entity.setBuyAmount(amount);
-                    entity.setOperationString("买入金额:" + entity.getBuyAmount());
+                    entity.setOperationString("买入金额:" + entity.getBuyAmount().setScale(2,BigDecimal.ROUND_HALF_UP));
                     entity.setPlanId(plan.getId());
                     entity.setRemark(remark);
                     entity.setBuyTime(new Date());
@@ -271,7 +271,7 @@ public class EtfGridController {
                         // 计算买入金额，用最低点的亏损率除以计划的亏损率乘以单批金额
                         BigDecimal amount = divide.divide(plan.getFallRange(), 6, BigDecimal.ROUND_HALF_UP).multiply(plan.getSingleAmount());
                         entity.setBuyAmount(amount);
-                        entity.setOperationString("买入金额:" + entity.getBuyAmount());
+                        entity.setOperationString("买入金额:" + entity.getBuyAmount().setScale(2,BigDecimal.ROUND_HALF_UP));
                         // 将这一网格设置为计划买入 加上
 //                            entity.setStatus(0);
                         entity.setPlanId(plan.getId());
@@ -299,7 +299,8 @@ public class EtfGridController {
         Map<String, List<OperationModel>> listMap = updateList.stream().filter(u -> StringUtils.isNotBlank(u.getName())).collect(Collectors.groupingBy(u -> u.getName()));
         Map<String, String> collect = new HashMap<>();
         if (!CollectionUtils.isEmpty(listMap)) {
-            collect = listMap.entrySet().stream().filter(u -> !CollectionUtils.isEmpty(u.getValue())).collect(Collectors.toMap(u -> u.getKey(), u -> {
+            collect = listMap.entrySet().stream().filter(u -> !CollectionUtils.isEmpty(u.getValue()))
+                    .filter(u->u.getValue().stream().filter(m -> m.getNum() != null).mapToDouble(m -> m.getNum().doubleValue()).sum()>0).collect(Collectors.toMap(u -> u.getKey(), u -> {
                 double num = u.getValue().stream().filter(m -> m.getNum() != null).mapToDouble(m -> m.getNum().doubleValue()).sum();
                 double sellMoney = u.getValue().stream().filter(m -> m.getSellAmount() != null).mapToDouble(m -> m.getSellAmount().doubleValue()).sum();
                 return "今天涨幅:" + u.getValue().get(0).getFailToday() + "         卖出份额:" + num + "                  卖出金额:" + sellMoney;
